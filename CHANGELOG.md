@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Node and Android installation work with captured Python stderr, including
+  pytest's `capsys` fixture and embedded consoles. Output goes to stderr;
+  streams without a file descriptor receive it when the child process exits.
+  Terminal output still streams directly, and installation consent is unchanged.
+
 ## 0.1.0 — 2026-10-18
 
 - Use PyJS's BSD-3-Clause license, copyright, author identity, and community

@@ -15,6 +15,7 @@ from filelock import FileLock, Timeout
 
 from .download import fetch
 from .errors import InstallationRequired, SDKError
+from .process import progress_output
 from .providers import Platform
 from .system import display_command
 
@@ -248,11 +249,12 @@ def bootstrap(home: Path, host: Platform, *, accept_sdk_license: bool) -> Androi
 def _run(sdk: AndroidInstallation, arguments, *, interactive: bool):
     command = sdk.command(*arguments)
     print(f"Running {display_command(command)}", file=sys.stderr)
-    return subprocess.run(
-        command, check=False, env=sdk.environment(),
-        stdin=None if interactive else subprocess.DEVNULL,
-        stdout=sys.stderr, stderr=sys.stderr, timeout=None if interactive else 1200,
-    )
+    with progress_output() as output:
+        return subprocess.run(
+            command, check=False, env=sdk.environment(),
+            stdin=None if interactive else subprocess.DEVNULL,
+            stdout=output, stderr=output, timeout=None if interactive else 1200,
+        )
 
 
 def ensure(home: Path, host: Platform, packages, *,

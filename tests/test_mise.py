@@ -1,7 +1,6 @@
 import json
 import os
 import subprocess
-import sys
 from pathlib import Path
 
 import pytest
@@ -68,8 +67,8 @@ def provider(request, tmp_path, monkeypatch):
             ])
         else:
             assert command[3:] == ("install", "core:node@22.14.0", "--jobs=1")
-            assert kwargs["stdout"] is sys.stderr
-            assert kwargs["stderr"] is sys.stderr
+            assert kwargs["stdout"] is kwargs["stderr"]
+            assert kwargs["stdout"].fileno() >= 0
             assert kwargs["timeout"] == 600
             create()
             output = None
