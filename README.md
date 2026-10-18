@@ -3,8 +3,8 @@
 A Python library and command-line tool for finding development SDKs and
 installing missing tools through established package managers.
 
-This is an alpha project preparing its first PyPI release. Java provisioning
-supports **JDK 21 and 25** through apt, dnf, pacman, Homebrew, or WinGet.
+This is an alpha project. Java provisioning supports **JDK 21 and 25** through
+apt, dnf, pacman, Homebrew, or WinGet.
 There is no JDK fallback,
 vendor requirement for existing installations, or exact patch-version pinning.
 
@@ -13,18 +13,18 @@ bootstraps mise. sdkmgr no longer downloads Node archives itself. Android
 provisioning delegates package installation to Google's command-line tools.
 LLVM compilation dependencies follow in a later version.
 
-## Install from source
+## Install
 
-Python 3.12 or newer is required. Until the first PyPI release, install the CLI
-from this repository:
+Python 3.12 or newer is required. Install the CLI in an isolated environment:
 
 ```sh
-uv tool install git+https://github.com/pyjs/sdkmgr.git
+uv tool install sdkmgr
 sdkmgr --help
 ```
 
-For a library dependency, use
-`pip install git+https://github.com/pyjs/sdkmgr.git` in your environment.
+For a library dependency, use `pip install sdkmgr` in your environment.
+To try unreleased source, use
+`uv tool install git+https://github.com/pyjs/sdkmgr.git` instead.
 Installing sdkmgr itself does not download any SDK or change tool selections.
 
 ## Android SDK packages

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.1.0 — 2026-10-18
+
 - Use PyJS's BSD-3-Clause license, copyright, author identity, and community
   metadata for this companion project.
 - Keep failed or interrupted downloads out of their destination paths and

@@ -1,12 +1,11 @@
 # Roadmap
 
-Publication is on hold until the user approves it. The first release
-establishes independent provisioning before PyJS adopts it.
+The first release establishes independent provisioning before PyJS adopts it.
 
 ## First-release gate
 
-- The user approved creating `pyjs/sdkmgr` and pushing the source. PyPI
-  publication is still on hold.
+- Source is published at `pyjs/sdkmgr`. The user approved publishing 0.1.0 to
+  PyPI; the upload and fresh-index installation verification are pending.
 - Local readiness review: 191 tests pass on Python 3.13, including download
   failure cleanup, offline Android listing without tools, and isolated smoke
   bootstrap regressions. Ruff passes. Both wheel and source installations
@@ -18,7 +17,7 @@ establishes independent provisioning before PyJS adopts it.
 - Fresh Linux mise/Node and Android bootstrap/API 35 smokes pass. Android's
   temporary SDK is removed after verification and a no-op retry. Package
   metadata passes `twine check --strict` for both distributions.
-- The initial alpha is ready for publication approval, with the platform
+- The initial alpha is approved for publication, with the platform
   validation limits below documented rather than implied to be covered.
 - Follow `RELEASING.md` for artifact checks and explicit publication approval.
 
