@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Use PyJS's BSD-3-Clause license, copyright, author identity, and community
+  metadata for this companion project.
 - Keep failed or interrupted downloads out of their destination paths and
   preserve existing files. Report malformed redirects without tracebacks.
 - List Android packages offline even when command-line tools are absent.

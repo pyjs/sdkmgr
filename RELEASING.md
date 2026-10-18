@@ -7,6 +7,9 @@ approval before creating a release or publishing a package.
 
 1. Update `sdkmgr.__version__` and the changelog. The build reads its version
    from `sdkmgr/__init__.py`; do not duplicate it in `pyproject.toml`.
+   Keep the license, copyright, author identity, and community links aligned
+   with PyJS. Preserve sdkmgr's own package name, URLs, and Python requirements;
+   building sdkmgr must not require a sibling PyJS checkout.
 2. Run the local checks from an activated development environment:
 
    ```sh
