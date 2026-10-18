@@ -52,6 +52,16 @@ source, shell history, or a committed configuration file.
 uv publish dist/release-0.1.0/*
 ```
 
+If credentials are already configured in `~/.pypirc`, use Twine instead:
+
+```sh
+uvx twine upload --non-interactive --repository pypi dist/release-0.1.0/*
+```
+
+Do not also pass `--repository-url`: Twine then bypasses the named
+repository's saved credentials. Never print the credential file to diagnose
+authentication failures.
+
 After publishing, install that exact version from PyPI in a fresh environment,
 check `sdkmgr --version` and `python -m sdkmgr --help`, then tag the approved
 commit and create its GitHub release. Record the result in the roadmap.

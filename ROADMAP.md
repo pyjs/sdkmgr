@@ -2,10 +2,12 @@
 
 The first release establishes independent provisioning before PyJS adopts it.
 
-## First-release gate
+## Initial release complete
 
-- Source is published at `pyjs/sdkmgr`. The user approved publishing 0.1.0 to
-  PyPI; the upload and fresh-index installation verification are pending.
+- Version 0.1.0 was published to PyPI on 2026-10-18 with user approval.
+  Both published artifact hashes match the validated local distributions.
+  A fresh, uncached PyPI installation passes the CLI and library smoke checks.
+  Source is published at `pyjs/sdkmgr`.
 - Local readiness review: 191 tests pass on Python 3.13, including download
   failure cleanup, offline Android listing without tools, and isolated smoke
   bootstrap regressions. Ruff passes. Both wheel and source installations
@@ -17,7 +19,7 @@ The first release establishes independent provisioning before PyJS adopts it.
 - Fresh Linux mise/Node and Android bootstrap/API 35 smokes pass. Android's
   temporary SDK is removed after verification and a no-op retry. Package
   metadata passes `twine check --strict` for both distributions.
-- The initial alpha is approved for publication, with the platform
+- The initial alpha is published, with the platform
   validation limits below documented rather than implied to be covered.
 - Follow `RELEASING.md` for artifact checks and explicit publication approval.
 
@@ -48,7 +50,7 @@ and restart after manual installation; mise/nvm Node adapters and pinned mise
 bootstrap. Provider selection is existing mise, existing nvm, then bootstrap
 mise. The direct Node downloader is removed. Local regressions and the CI
 provider smokes above pass using disposable stores. No system package
-installation, local manager migration, or PyPI publication has occurred.
+installation or local manager migration has occurred.
 
 Android uses only `android sdk`, with slash-separated package IDs and offline
 package records. The legacy adapter and license-review command are removed.
