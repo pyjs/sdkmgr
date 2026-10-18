@@ -11,18 +11,22 @@ establishes independent provisioning before PyJS adopts it.
   failure cleanup, offline Android listing without tools, and isolated smoke
   bootstrap regressions. Ruff passes. Both wheel and source installations
   pass the packaged tests outside the checkout.
-- A fresh Linux mise bootstrap and real Node installation smoke pass; package
-  metadata also passes `twine check --strict` for both distributions.
-- GitHub CI must verify Python 3.12/3.14 and provider smokes on Linux, macOS,
-  and Windows before the first PyPI upload.
-- The first CI run passed Linux/macOS package checks and real mise installs on
-  all three systems. Windows tests exposed platform-dependent fixtures and
-  raw ZIP filename validation gaps; fixes are awaiting a fresh CI run.
+- All eleven GitHub CI jobs pass: Python 3.12/3.14 tests and installed-artifact
+  checks on Linux, macOS, and Windows; real mise/Node installs on all three;
+  and real nvm/Node installs on Linux and macOS. The Windows fixture and raw
+  ZIP filename issues found in the first CI run are fixed.
+- Fresh Linux mise/Node and Android bootstrap/API 35 smokes pass. Android's
+  temporary SDK is removed after verification and a no-op retry. Package
+  metadata passes `twine check --strict` for both distributions.
+- The initial alpha is ready for publication approval, with the platform
+  validation limits below documented rather than implied to be covered.
 - Follow `RELEASING.md` for artifact checks and explicit publication approval.
 
 ## Further validation and follow-up
 
 - Smoke-test real package installations on supported systems and ARM64.
+- Update the CI action versions to remove GitHub's Node 20 deprecation
+  warnings; the current actions pass under its Node 24 compatibility mode.
 - Integrate Node and JDK provisioning into PyJS without changing its runners:
   keep the developer's local nvm; install mise explicitly in PyJS CI so both
   provider paths are exercised regularly. This awaits PyJS adoption of sdkmgr.
@@ -43,10 +47,9 @@ Implemented: flat package layout; Java 21/25 package providers including
 Arch/Omarchy through pacman; discovery, confirmation, OS-owned authentication,
 and restart after manual installation; mise/nvm Node adapters and pinned mise
 bootstrap. Provider selection is existing mise, existing nvm, then bootstrap
-mise. The direct Node downloader is removed. Local regression tests and real
-Linux mise/nvm Node installation smokes pass using temporary storage. Networked
-provider smoke jobs are configured but have not run on GitHub yet. No system
-package installation, local manager migration, or publication has occurred.
+mise. The direct Node downloader is removed. Local regressions and the CI
+provider smokes above pass using disposable stores. No system package
+installation, local manager migration, or PyPI publication has occurred.
 
 Android uses only `android sdk`, with slash-separated package IDs and offline
 package records. The legacy adapter and license-review command are removed.

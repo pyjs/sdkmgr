@@ -335,7 +335,9 @@ The release check builds both distributions in temporary storage, audits their
 contents, installs each into a fresh environment, and runs the packaged tests
 outside the checkout. It does not publish anything. `uv build` creates the
 wheel and source archive in `dist/` when you are ready to retain artifacts.
-Real Linux mise/nvm Node smokes pass; real OS JDK installation still needs
+The Python 3.12/3.14 tests and installed-artifact checks pass on all three
+systems. Real mise/Node smokes pass on Linux, macOS, and Windows; real nvm/Node
+smokes pass on Linux and macOS. Real OS JDK installation still needs
 verification on those platforms.
 Do not run an automatic source formatter.
 
