@@ -187,10 +187,11 @@ def _extract(archive: Path, destination: Path):
             raise SDKError("Android tools archive exceeds extraction limits.")
         for entry in entries:
             path = PurePosixPath(entry.filename)
+            original = entry.orig_filename
             mode = entry.external_attr >> 16
             if (
                 path.is_absolute() or ".." in path.parts or not path.parts
-                or path.parts[0] != "cmdline-tools" or "\\" in entry.filename
+                or path.parts[0] != "cmdline-tools" or "\\" in original or "\x00" in original
                 or ":" in entry.filename or stat.S_ISLNK(mode)
                 or (stat.S_IFMT(mode) not in {0, stat.S_IFREG, stat.S_IFDIR})
             ):

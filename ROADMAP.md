@@ -7,14 +7,17 @@ establishes independent provisioning before PyJS adopts it.
 
 - The user approved creating `pyjs/sdkmgr` and pushing the source. PyPI
   publication is still on hold.
-- Local readiness review: 190 tests pass on Python 3.13, including download
+- Local readiness review: 191 tests pass on Python 3.13, including download
   failure cleanup, offline Android listing without tools, and isolated smoke
   bootstrap regressions. Ruff passes. Both wheel and source installations
-  pass the same 190 packaged tests outside the checkout.
+  pass the packaged tests outside the checkout.
 - A fresh Linux mise bootstrap and real Node installation smoke pass; package
   metadata also passes `twine check --strict` for both distributions.
 - GitHub CI must verify Python 3.12/3.14 and provider smokes on Linux, macOS,
   and Windows before the first PyPI upload.
+- The first CI run passed Linux/macOS package checks and real mise installs on
+  all three systems. Windows tests exposed platform-dependent fixtures and
+  raw ZIP filename validation gaps; fixes are awaiting a fresh CI run.
 - Follow `RELEASING.md` for artifact checks and explicit publication approval.
 
 ## Further validation and follow-up

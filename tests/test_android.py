@@ -186,7 +186,8 @@ def test_pinned_bootstrap_and_reuse(tmp_path, bootstrap_archive, host):
     sdk = android.ensure(home, host, (), interactive=False, accept_sdk_license=True)
     assert sdk.executable().is_file()
     assert (sdk.tools / "NOTICE.txt").read_text() == "license notice"
-    assert sdk.executable().stat().st_mode & stat.S_IXUSR
+    if os.name != "nt":
+        assert sdk.executable().stat().st_mode & stat.S_IXUSR
     assert android.ensure(home, host, (), interactive=False) == sdk
     assert len(bootstrap_archive) == 1
     assert android.TOOLS_BUILD in bootstrap_archive[0]
@@ -211,11 +212,15 @@ def test_bad_checksum_never_publishes(tmp_path, bootstrap_archive, monkeypatch):
 
 
 @pytest.mark.parametrize("name", ["../escape", "/absolute", "cmdline-tools/../../escape",
-                                "cmdline-tools/bin\\escape", "cmdline-tools/C:escape", "other/file"])
+                                "cmdline-tools/bin\\escape", "cmdline-tools/C:escape", "other/file",
+                                "cmdline-tools/bin/android\x00hidden"])
 def test_archive_traversal_is_rejected(tmp_path, name):
     archive = tmp_path / "bad.zip"
     with zipfile.ZipFile(archive, "w") as output:
-        output.writestr(name, "bad")
+        # ZipInfo's constructor normalizes backslashes on Windows and truncates NULs.
+        entry = zipfile.ZipInfo("placeholder")
+        entry.filename = name
+        output.writestr(entry, "bad")
     with pytest.raises(SDKError, match="Unsafe Android archive member"):
         android._extract(archive, tmp_path / "stage")
     assert not (tmp_path / "escape").exists()
@@ -318,6 +323,7 @@ def test_android_command_is_explicit_about_root_and_metrics(tmp_path):
 
 
 def test_cli_lists_and_installs_without_java(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(Platform, "current", classmethod(lambda cls: HOST))
     tools(tmp_path)
     package(tmp_path, "platform-tools", "37")
     calls = []

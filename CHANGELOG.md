@@ -8,6 +8,8 @@
 - Validate wheel and source installations against the packaged tests, with a
   single source for the package and CLI version.
 - Keep the Android installation smoke's bootstrap inside its temporary SDK.
+- Validate original ZIP member names before Windows path normalization or
+  NUL truncation can hide malformed archive entries.
 
 - Provision Android SDK package sets through Google's `android sdk` CLI,
   reusing existing SDKs and delegating package dependencies to Google.
