@@ -1,0 +1,47 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "sdkmgr"
+dynamic = ["version"]
+description = "Discover and provision Node, Java, and Android development tools."
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+authors = [{name = "PyJS contributors"}]
+keywords = ["sdk", "node", "java", "android", "toolchain"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3",
+    "Topic :: Software Development :: Build Tools",
+]
+dependencies = ["filelock>=3.16", "httpx>=0.27,<1", "platformdirs>=4"]
+
+[project.urls]
+Homepage = "https://github.com/pyjs/sdkmgr"
+Issues = "https://github.com/pyjs/sdkmgr/issues"
+
+[project.scripts]
+sdkmgr = "sdkmgr.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff>=0.11"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["sdkmgr"]
+
+[tool.hatch.version]
+path = "sdkmgr/__init__.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/sdkmgr", "/tests", "/scripts", "/README.md", "/CHANGELOG.md",
+    "/LICENSE", "/pyproject.toml", "/uv.lock",
+]
