@@ -1,5 +1,17 @@
 # Roadmap
 
+## 0.3.1 prepared
+
+- Bound retries for Windows access/sharing errors during Tailwind cache
+  publication. Persistent errors still fail; checksums and atomicity remain
+  unchanged. Simulated retry-boundary coverage and real provider smokes pass,
+  but the intermittent lock holder and duration remain unknown.
+- Include Chrome/browser in the package summary and keywords.
+- Follow-up: preserve the original publication error if a persistent Windows
+  lock also prevents temporary-directory cleanup, and make retries observable.
+  Investigate the similar mise bootstrap sequence if a real failure occurs;
+  no mise lock failure is currently established.
+
 ## 0.3.0 published
 
 - Published to PyPI with source tagged `v0.3.0`. Published wheel and source
@@ -8,8 +20,8 @@
 - Browser provisioning, Android inspection, locked artifacts, Clang and
   Tailwind are available. Real provider smokes pass on Linux, macOS and Windows
   at the approved release candidate; the merged release tree is identical.
-- Follow-up: include browser/Chrome in the package summary and keywords in a
-  future release. The 0.3.0 long description documents the browser APIs.
+- The 0.3.0 long description documents the browser APIs; summary and keywords
+  are expanded in 0.3.1.
 
 ## 0.2.0 published
 
