@@ -1,5 +1,4 @@
 import os
-import platform
 import shutil
 import sys
 import tempfile
@@ -13,7 +12,7 @@ from .archives import extract_zip
 from .artifacts import Artifact, ArtifactCache
 from .errors import SDKError
 from .installation import executable_path
-from .providers import Platform
+from .providers import Platform, linux_libc
 
 VERSION = "155.0.8059.84"
 # SHA-256 of the official Chrome for Testing archives, not publisher signatures.
@@ -63,11 +62,17 @@ def _executable(path: Path, host: Platform) -> bool:
     return path.is_file() and (host.system == "windows" or os.access(path, os.X_OK))
 
 
-def _managed_path(root: Path, host: Platform):
+def _provider_error(host: Platform) -> str | None:
     if host.tag not in ARCHIVES:
-        raise SDKError(f"No pinned Chrome for Testing provider for {host.tag}; supply a browser explicitly.")
-    if host.system == "linux" and platform.libc_ver()[0].lower() == "musl":
-        raise SDKError("Chrome for Testing requires glibc; install a compatible Chromium and set CHROME_BIN.")
+        return f"No pinned Chrome for Testing provider for {host.tag}; supply a browser explicitly."
+    if host.system == "linux" and linux_libc() not in {"glibc", ""}:
+        return "Chrome for Testing requires glibc; install a compatible Chromium and set CHROME_BIN."
+    return None
+
+
+def _managed_path(root: Path, host: Platform):
+    if error := _provider_error(host):
+        raise SDKError(error)
     asset, digest = ARCHIVES[host.tag]
     directory = root / "tools/chrome" / VERSION / asset
     relative = "chrome.exe" if host.system == "windows" else "chrome"
@@ -99,7 +104,7 @@ def find(root: Path, host: Platform, *, executable=None, managed: bool = False):
             for path in _locations(host):
                 if _executable(path, host):
                     return BrowserInstallation(path.absolute(), host)
-            if host.tag not in ARCHIVES:
+            if _provider_error(host):
                 return None
         directory, relative, _, _ = _managed_path(root, host)
         return _cached(directory, relative, host)

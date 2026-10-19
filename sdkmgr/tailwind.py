@@ -1,6 +1,5 @@
 import hashlib
 import os
-import platform
 import re
 import shutil
 import subprocess
@@ -13,7 +12,7 @@ from filelock import FileLock, Timeout
 from .download import fetch
 from .errors import SDKError
 from .installation import ToolInstallation, executable_path
-from .providers import Platform
+from .providers import Platform, linux_libc
 
 
 def validate_version(version: str):
@@ -26,8 +25,8 @@ def asset_name(host: Platform) -> str:
         raise SDKError("No native Windows ARM64 Tailwind provider; supply a compatible executable explicitly.")
     variant = ""
     if host.system == "linux":
-        libc = platform.libc_ver()[0].lower()
-        if libc == "musl" or (not libc and tuple(Path("/lib").glob("ld-musl-*.so.1"))):
+        libc = linux_libc()
+        if libc == "musl":
             variant = "-musl"
         elif libc not in {"glibc", ""}:
             raise SDKError(f"Unsupported Linux C library for Tailwind: {libc}.")

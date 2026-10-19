@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from sdkmgr import Manager, SDKError, artifacts, browser
+from sdkmgr import Manager, SDKError, artifacts, browser, providers
 from sdkmgr.cli import main
 from sdkmgr.providers import Platform
 
@@ -20,6 +20,7 @@ LOCATIONS = browser._locations
 def isolate(monkeypatch):
     monkeypatch.delenv("CHROME_BIN", raising=False)
     monkeypatch.setattr(browser, "_locations", lambda host: ())
+    monkeypatch.setattr(providers.platform, "libc_ver", lambda: ("glibc", "2.39"))
     monkeypatch.setattr(Platform, "current", classmethod(lambda cls: HOST))
 
 
@@ -126,12 +127,25 @@ def test_unavailable_native_provider(tmp_path):
     assert browser.ensure(tmp_path, host, executable=binary).path == binary
 
 
-def test_musl_uses_external_browser_not_glibc_download(tmp_path, monkeypatch, downloads):
-    monkeypatch.setattr(browser.platform, "libc_ver", lambda: ("musl", "1.2"))
+@pytest.mark.parametrize("libc", ["musl", "", "uclibc"])
+def test_incompatible_libc_uses_external_browser_not_glibc_download(tmp_path, monkeypatch, downloads, libc):
+    monkeypatch.setattr(providers.platform, "libc_ver", lambda: (libc, ""))
+    monkeypatch.setattr(Path, "glob", lambda *a: iter([Path("/lib/ld-musl-x86_64.so.1")]))
+    manager = Manager(tmp_path / "cache")
+    assert manager.find_browser() is None
+    for operation in (manager.find_browser, manager.ensure_browser):
+        with pytest.raises(SDKError, match="requires glibc"):
+            operation(managed=True)
     with pytest.raises(SDKError, match="requires glibc"):
-        Manager(tmp_path).ensure_browser(managed=True)
+        manager.ensure_browser()
+    assert not manager.root.exists()
     binary = executable(tmp_path / "chromium")
-    assert Manager(tmp_path).ensure_browser(executable=binary).path == binary
+    assert manager.ensure_browser(executable=binary).path == binary
+    monkeypatch.setenv("CHROME_BIN", str(binary))
+    assert manager.find_browser().path == binary
+    monkeypatch.setenv("CHROME_BIN", "missing")
+    with pytest.raises(SDKError, match="Configured Chrome executable"):
+        manager.find_browser()
     assert downloads == []
 
 

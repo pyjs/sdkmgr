@@ -73,6 +73,40 @@ def test_invalid_link_graph_never_writes_outside_staging(tmp_path, links):
     assert not list(outside.iterdir())
 
 
+@pytest.mark.skipif(os.name == "nt", reason="Only macOS provider extracts symlinks")
+@pytest.mark.parametrize("name,alias", [("A", "a"), ("caf\u00e9", "cafe\u0301")])
+@pytest.mark.parametrize("nested", ["link", "directory/link"])
+def test_filesystem_alias_never_writes_through_link(tmp_path, name, alias, nested):
+    probe = tmp_path / name
+    probe.touch()
+    if not (tmp_path / alias).exists():
+        pytest.skip("Filesystem does not alias these names")
+    probe.unlink()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    path = archive(tmp_path, [
+        (f"tool/{name}", "../../outside", stat.S_IFLNK | 0o777),
+        (f"tool/{alias}/{nested}", "target", stat.S_IFLNK | 0o777),
+    ])
+    with pytest.raises(SDKError, match="nests a member under a symlink"):
+        extract_zip(path, tmp_path / "stage", root="tool", symlinks=True)
+    assert not list(outside.iterdir())
+
+
+@pytest.mark.skipif(os.name == "nt", reason="Only macOS provider extracts symlinks")
+def test_trusted_symlink_outside_staging_is_allowed(tmp_path):
+    directory = tmp_path / "directory"
+    directory.mkdir()
+    alias = tmp_path / "alias"
+    alias.symlink_to(directory, target_is_directory=True)
+    path = archive(tmp_path, [
+        ("tool/data", "resource", stat.S_IFREG | 0o644),
+        ("tool/link", "data", stat.S_IFLNK | 0o777),
+    ])
+    extract_zip(path, alias / "stage", root="tool", symlinks=True)
+    assert (directory / "stage/tool/link").read_text() == "resource"
+
+
 def test_duplicate_names_rejected(tmp_path):
     with pytest.warns(UserWarning, match="Duplicate"):
         path = archive(tmp_path, [("tool/file", "data", stat.S_IFREG | 0o644)] * 2)

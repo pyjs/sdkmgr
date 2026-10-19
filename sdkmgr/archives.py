@@ -51,6 +51,12 @@ def extract_zip(archive: Path, destination: Path, *, root: str, symlinks: bool =
             if any(parent in link_paths for parent in target.parents):
                 raise SDKError(f"Tool archive nests a member under a symlink: {target.name!r}.")
         for target, link in links:
+            # Filesystem aliases may hide a link ancestor from Path equality.
+            for parent in target.parents:
+                if parent == destination:
+                    break
+                if parent.is_symlink():
+                    raise SDKError(f"Tool archive nests a member under a symlink: {target.name!r}.")
             target.parent.mkdir(parents=True, exist_ok=True)
             target.symlink_to(link)
         boundary = (destination / root).resolve()
