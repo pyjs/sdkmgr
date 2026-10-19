@@ -139,12 +139,13 @@ def test_replay_failure_preserves_outcome(monkeypatch, operation, error_type, ou
 
 @pytest.mark.parametrize("prefix_size", [0, 65535])
 @pytest.mark.parametrize("status", [0, 7])
-def test_replay_escapes_unencodable_text_without_losing_diagnostics(monkeypatch, prefix_size, status):
+@pytest.mark.parametrize("encoding", ["ascii", "cp1252", "cp437", "cp1251"])
+def test_replay_escapes_unencodable_text_without_losing_diagnostics(monkeypatch, prefix_size, status, encoding):
     raw = io.BytesIO()
-    stream = io.TextIOWrapper(raw, encoding="ascii", errors="strict", newline="")
+    stream = io.TextIOWrapper(raw, encoding=encoding, errors="strict", newline="")
     monkeypatch.setattr(sys, "stderr", stream)
     monkeypatch.setattr(process, "text_encoding", lambda value: "utf-8")
-    message = "x" * prefix_size + "✓\nERROR: checksum mismatch\n" + "y" * 65536
+    message = "x" * prefix_size + "✓ © \u0081 € — Кириллица\nERROR: checksum mismatch\n" + "y" * 65536
 
     def invoke():
         with progress_output() as output:
@@ -158,4 +159,4 @@ def test_replay_escapes_unencodable_text_without_losing_diagnostics(monkeypatch,
         assert caught.value.returncode == status
     else:
         invoke()
-    assert raw.getvalue() == message.encode("ascii", "backslashreplace")
+    assert raw.getvalue() == message.encode(encoding, "backslashreplace")

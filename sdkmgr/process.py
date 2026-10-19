@@ -41,7 +41,8 @@ def progress_output(enabled=True):
                         try:
                             stream.write(chunk)
                         except UnicodeEncodeError as error:
-                            stream.write(chunk.encode(error.encoding, "backslashreplace").decode(error.encoding))
+                            encoding = getattr(stream, "encoding", None) or error.encoding
+                            stream.write(chunk.encode(encoding, "backslashreplace").decode(encoding))
                     stream.flush()
     else:
         yield stream
