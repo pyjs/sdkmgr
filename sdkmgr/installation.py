@@ -1,10 +1,19 @@
 import os
+import shutil
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
 from .errors import SDKError
 from .providers import Platform, reported_version
+
+
+def executable_path(executable: str | Path) -> Path:
+    # Preserve './' before which(): Path would turn './clang' into a PATH name.
+    expanded = os.path.expanduser(os.fspath(executable))
+    if isinstance(executable, str):
+        expanded = shutil.which(expanded) or expanded
+    return Path(expanded).absolute()
 
 
 @dataclass(frozen=True)

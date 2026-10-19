@@ -12,7 +12,7 @@ from filelock import FileLock, Timeout
 
 from .download import fetch
 from .errors import SDKError
-from .installation import ToolInstallation
+from .installation import ToolInstallation, executable_path
 from .providers import Platform
 
 
@@ -43,7 +43,8 @@ def _version(path: Path) -> str | None:
         )
     except (OSError, subprocess.SubprocessError, UnicodeError):
         return None
-    match = re.search(r"\btailwindcss\s+v(\d+\.\d+\.\d+)(?![\w.-])", result.stdout + result.stderr)
+    output = re.sub(r"\x1b\[[0-9;]*m", "", result.stdout + result.stderr)
+    match = re.search(r"\btailwindcss\s+v(\d+\.\d+\.\d+)(?![\w.-])", output)
     return match[1] if match else None
 
 
@@ -81,8 +82,7 @@ def find(root: Path, host: Platform, version: str, *, executable=None) -> ToolIn
     try:
         candidate = configured or shutil.which("tailwindcss")
         if candidate:
-            expanded = str(Path(candidate).expanduser())
-            path = Path(shutil.which(expanded) or expanded).absolute()
+            path = executable_path(candidate)
             if path.is_file() and _version(path) == version:
                 return ToolInstallation("tailwindcss", version, path, host)
             if configured:

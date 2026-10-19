@@ -214,6 +214,8 @@ def test_manifest_ignores_other_directories(tmp_path):
 
 @pytest.mark.parametrize("output,expected", [
     ("≈ tailwindcss v4.3.3\nUsage", "4.3.3"),
+    ("≈ tailwindcss \x1b[34mv4.3.3\x1b[39m\nUsage", "4.3.3"),
+    ("≈ tailwindcss \x1b[34mv4.3.3-beta.1\x1b[39m", None),
     ("tailwindcss v4.3.3-beta.1", None), ("other v4.3.3", None),
 ])
 def test_version_probe(monkeypatch, output, expected):

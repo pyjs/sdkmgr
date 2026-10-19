@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .errors import SDKError
-from .installation import ToolInstallation
+from .installation import ToolInstallation, executable_path
 from .providers import Platform
 
 
@@ -49,8 +49,7 @@ def find(host: Platform, executable: str | Path | None = None) -> "ClangInstalla
     """Discover Clang without installing or compiling; an explicit path is strict."""
     configured = executable or os.environ.get("CLANG")
     if configured:
-        expanded = str(Path(configured).expanduser())
-        paths = [Path(shutil.which(expanded) or expanded)]
+        paths = [executable_path(configured)]
     else:
         paths = candidates(host)
     seen = set()
