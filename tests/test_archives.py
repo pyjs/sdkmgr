@@ -12,14 +12,16 @@ def archive(tmp_path, entries):
     path = tmp_path / "payload.zip"
     with zipfile.ZipFile(path, "w") as source:
         for name, contents, mode in entries:
-            entry = zipfile.ZipInfo(name)
+            # Preserve malformed raw names; ZipInfo normalizes them on Windows.
+            entry = zipfile.ZipInfo("placeholder")
+            entry.filename = name
             entry.external_attr = mode << 16
             source.writestr(entry, contents)
     return path
 
 
 @pytest.mark.parametrize("name", ["../outside", "/outside", "tool/../outside", "wrong/file",
-                                      "tool\\file", "tool/file:stream"])
+                                      "tool\\file", "tool/file:stream", "tool/file\x00hidden"])
 def test_unsafe_members_rejected(tmp_path, name):
     path = archive(tmp_path, [(name, "payload", stat.S_IFREG | 0o644)])
     with pytest.raises(SDKError, match="Unsafe tool archive member"):
