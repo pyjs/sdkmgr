@@ -36,13 +36,14 @@ The first release establishes independent provisioning before PyJS adopts it.
 
 ## Further validation and follow-up
 
-- Current unreleased validation: 365 local tests pass, including tests run
+- Initial unreleased validation: 365 local tests passed, including tests run
   against isolated wheel and source installations. Ruff and diff checks pass.
   Fresh Linux Tailwind 4.3.3 download, checksum/version validation, cache
   reuse, and CSS generation pass. Existing Android API 35 and build-tools
   35.0.1 lookups pass without changing SDK packages.
-- A manual-dispatch CI job now covers real Clang linking and Tailwind on
-  Linux, macOS, and Windows. It has not been run for the unreleased changes.
+- Manual-dispatch CI verifies real Clang linking and Tailwind download, cache
+  reuse, and CSS generation on Linux, macOS, and Windows. Colored Tailwind
+  banners and explicit relative executable selection have regression coverage.
 - Smoke-test real package installations on supported systems and ARM64.
 - Update the CI action versions to remove GitHub's Node 20 deprecation
   warnings; the current actions pass under its Node 24 compatibility mode.

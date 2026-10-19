@@ -456,7 +456,8 @@ python scripts/smoke_tools.py tailwindcss
 
 The Clang smoke requires an existing compiler and never installs OS packages.
 The Tailwind smoke uses a temporary cache, or reuses an exact-version tool
-already on PATH. Both clean up their temporary files. Real Linux checks pass;
-macOS/Windows provisioning and link checks still need live validation.
+already on PATH. Both clean up their temporary files. Real Clang linking and
+Tailwind download, reuse, and CSS generation pass on Linux, macOS, and Windows.
+Clang installation through OS package managers still needs live validation.
 The `tool-provider` CI job runs these smokes on all three operating systems
 when the Tests workflow is dispatched manually; it does not run on every push.
