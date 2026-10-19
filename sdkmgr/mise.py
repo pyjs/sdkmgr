@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 from .errors import SDKError
+from .process import progress_output
 from .providers import Platform, validate_node_version
 
 
@@ -27,12 +28,12 @@ def _run(executable: str, *arguments: str, installing: bool = False):
         "MISE_NODE_DEFAULT_PACKAGES_FILE": os.devnull,
     })
     try:
-        return subprocess.run(
-            command, check=True, text=True, stdin=subprocess.DEVNULL,
-            stdout=sys.stderr if installing else subprocess.PIPE,
-            stderr=sys.stderr if installing else subprocess.PIPE,
-            timeout=600 if installing else 30, env=environment,
-        )
+        with progress_output(installing) as output:
+            return subprocess.run(
+                command, check=True, text=True, stdin=subprocess.DEVNULL,
+                stdout=output, stderr=output,
+                timeout=600 if installing else 30, env=environment,
+            )
     except subprocess.CalledProcessError as error:
         detail = (error.stderr or "").strip()
         raise SDKError(

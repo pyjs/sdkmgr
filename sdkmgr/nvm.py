@@ -12,6 +12,7 @@ from filelock import FileLock, Timeout
 
 from .errors import InstallationRequired, SDKError
 from .installation import validated_node
+from .process import progress_output
 from .providers import Platform, validate_node_version
 
 
@@ -24,12 +25,12 @@ class Nvm:
 
 def _run(command, *, installing=False, env=None):
     try:
-        return subprocess.run(
-            command, check=True, text=True, stdin=subprocess.DEVNULL,
-            stdout=sys.stderr if installing else subprocess.PIPE,
-            stderr=sys.stderr if installing else subprocess.PIPE,
-            timeout=600 if installing else 30, env=env,
-        )
+        with progress_output(installing) as output:
+            return subprocess.run(
+                command, check=True, text=True, stdin=subprocess.DEVNULL,
+                stdout=output, stderr=output,
+                timeout=600 if installing else 30, env=env,
+            )
     except subprocess.CalledProcessError as error:
         detail = (error.stderr or "").strip()
         raise SDKError(f"nvm failed with status {error.returncode}. {detail}".strip()) from error

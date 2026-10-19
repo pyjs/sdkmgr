@@ -5,4 +5,4 @@ from .core import Installation, Manager
 from .errors import InstallationRequired, SDKError
 
 __all__ = ["AndroidInstallation", "Installation", "InstallationRequired", "Manager", "SDKError"]
-__version__ = "0.1.0"
+__version__ = "0.2.0"
