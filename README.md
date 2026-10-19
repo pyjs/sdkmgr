@@ -11,9 +11,9 @@ vendor requirement for existing installations, or exact patch-version pinning.
 Node provisioning prefers existing mise, otherwise existing nvm, otherwise
 bootstraps mise. sdkmgr no longer downloads Node archives itself. Android
 provisioning delegates package installation to Google's command-line tools.
-The unreleased source also provisions Clang, Tailwind CSS, and Chrome for
+sdkmgr also provisions Clang, Tailwind CSS, and Chrome for
 Testing, resolves Android build-tool paths, and caches checksum-locked files.
-These additions are not in PyPI 0.2.0 yet.
+These APIs are available starting with sdkmgr 0.3.0.
 
 ## Install
 
@@ -329,7 +329,7 @@ location is not recognized, set `JAVA_HOME` and retry. Long-running interactive
 package installations are not given an arbitrary timeout while authentication
 or user confirmation may be pending.
 
-## Clang and LLVM toolchains (unreleased)
+## Clang and LLVM toolchains
 
 ```sh
 sdkmgr clang which
@@ -386,7 +386,7 @@ shadow unrelated user tools or version-manager shims in child processes.
 To preserve PATH ordering, invoke the absolute `executable()` path and omit
 `env`, or pass your unchanged environment. No parent environment is modified.
 
-## Standalone Tailwind CSS (unreleased)
+## Standalone Tailwind CSS
 
 ```sh
 sdkmgr install tailwindcss@4.3.3
@@ -420,7 +420,7 @@ The generic `list` command still lists Node and Java installations only.
 Use `clang which`, `which tailwindcss@X.Y.Z`, and `android list` for the
 other tools.
 
-## Browser discovery and provisioning (unreleased)
+## Browser discovery and provisioning
 
 ```sh
 sdkmgr browser which
@@ -458,7 +458,7 @@ found on disk can still fail at launch due to missing host prerequisites.
 Browser testing libraries retain that responsibility. Windows ARM64 needs an
 existing compatible browser rather than a silently substituted x64 download.
 
-## Android SDK inspection without an installer (unreleased)
+## Android SDK inspection without an installer
 
 ```python
 sdk = manager.inspect_android(sdk_root="/path/to/sdk")
@@ -475,7 +475,7 @@ lookups report missing files. adb/emulator paths are computed, not validated.
 raises a diagnostic. `find_android()` retains its installer-discovery contract.
 Neither API downloads, launches tools, or changes the filesystem.
 
-## Checksum-locked artifacts (unreleased)
+## Checksum-locked artifacts
 
 ```python
 from sdkmgr import Artifact, ArtifactCache
