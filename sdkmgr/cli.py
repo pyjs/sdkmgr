@@ -6,12 +6,18 @@ from .android import installed_packages, sdk_root
 
 
 def main(argv=None) -> int:
-    parser = argparse.ArgumentParser(description="Provision Node, Java, Clang, Tailwind, and Android SDK packages.")
+    parser = argparse.ArgumentParser(description="Provision Node, Java, Clang, Tailwind, Chrome, and Android tools.")
     parser.add_argument("--version", action="version", version=__version__)
     parser.add_argument("--root", help="Private manager and standalone-tool directory")
     parser.add_argument("--non-interactive", action="store_true", help="Never prompt; defer OS package installs")
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("list", help="List selected-manager Node and discovered JDK installations")
+    browser_parser = commands.add_parser("browser", help="Find Chrome/Chromium or provision Chrome for Testing")
+    browser_parser.add_argument("browser_command", choices=("which", "install"))
+    browser_selection = browser_parser.add_mutually_exclusive_group()
+    browser_selection.add_argument("--executable", help="Require this executable without downloading a replacement")
+    browser_selection.add_argument("--managed", action="store_true",
+                                   help="Select pinned Chrome for Testing instead of PATH or CHROME_BIN")
     clang_parser = commands.add_parser("clang", help="Find or provision and validate host Clang")
     clang_parser.add_argument("clang_command", choices=("which", "install"))
     clang_parser.add_argument("--executable", help="Use this compiler without installing a replacement")
@@ -31,6 +37,13 @@ def main(argv=None) -> int:
     args = parser.parse_args(argv)
     try:
         manager = Manager(args.root, interactive=False if args.non_interactive else None)
+        if args.command == "browser":
+            method = manager.ensure_browser if args.browser_command == "install" else manager.find_browser
+            browser = method(executable=args.executable, managed=args.managed)
+            if browser is None:
+                raise SDKError("Chrome/Chromium was not found; run sdkmgr browser install.")
+            print(browser.executable())
+            return 0
         if args.command == "clang":
             if args.clang_command == "install":
                 compiler = manager.ensure_clang(executable=args.executable, sanitizers=args.sanitizer)

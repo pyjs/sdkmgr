@@ -1,6 +1,6 @@
 import pytest
 
-from sdkmgr import AndroidInstallation, SDKError
+from sdkmgr import AndroidInstallation, Manager, SDKError
 from sdkmgr.providers import Platform
 
 
@@ -47,3 +47,46 @@ def test_invalid_api(tmp_path, api):
     sdk = AndroidInstallation(tmp_path, tmp_path / "tools", Platform("linux", "x64"))
     with pytest.raises(SDKError, match="positive integer"):
         sdk.platform_jar(api)
+
+
+@pytest.mark.parametrize("system", ["linux", "macos", "windows"])
+def test_inspect_sdk_without_installer(tmp_path, monkeypatch, system):
+    host = Platform(system, "x64")
+    monkeypatch.setattr(Platform, "current", classmethod(lambda cls: host))
+    suffix = ".exe" if system == "windows" else ""
+    adb = tmp_path / "platform-tools" / f"adb{suffix}"
+    adb.parent.mkdir()
+    adb.touch()
+    jar = tmp_path / "platforms/android-35/android.jar"
+    jar.parent.mkdir(parents=True)
+    jar.touch()
+    manager = Manager(tmp_path / "unused")
+    sdk = manager.inspect_android(sdk_root=tmp_path)
+    assert sdk.home == tmp_path
+    assert sdk.tools is None
+    assert sdk.executable("adb") == adb
+    assert sdk.platform_jar(35) == jar
+    assert manager.find_android(sdk_root=tmp_path) is None
+    with pytest.raises(SDKError, match="installer CLI is not installed"):
+        sdk.command("list")
+    base = {"PATH": "original"}
+    assert sdk.environment(base)["ANDROID_HOME"] == str(tmp_path)
+    assert "cmdline-tools" not in sdk.environment(base)["PATH"]
+    assert base == {"PATH": "original"}
+    assert not (tmp_path / "unused").exists()
+
+
+def test_inspect_missing_root_does_not_create_it(tmp_path):
+    root = tmp_path / "missing"
+    assert Manager().inspect_android(sdk_root=root) is None
+    assert not root.exists()
+
+
+def test_inspection_keeps_installer_when_present(tmp_path, monkeypatch):
+    host = Platform("linux", "x64")
+    monkeypatch.setattr(Platform, "current", classmethod(lambda cls: host))
+    tools = tmp_path / "cmdline-tools/latest"
+    (tools / "bin").mkdir(parents=True)
+    (tools / "bin/android").touch()
+    manager = Manager()
+    assert manager.inspect_android(sdk_root=tmp_path) == manager.find_android(sdk_root=tmp_path)

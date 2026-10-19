@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Discover Chrome/Chromium without launching it; optionally provision pinned,
+  checksum-verified Chrome for Testing with explicit managed selection.
+- Inspect existing Android SDKs without requiring the installer CLI.
+- Acquire caller-selected HTTPS artifacts through a checksum-addressed cache
+  with verified reuse, installation locks, and atomic publication.
 - Discover and provision host Clang through OS package managers, with explicit
   consent and C/LLVM IR compile/link validation. Report missing platform SDKs
   and optionally check sanitizer linking without running generated programs.

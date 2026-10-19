@@ -1,8 +1,17 @@
 import platform
 import re
 from dataclasses import dataclass
+from pathlib import Path
 
 from .errors import SDKError
+
+
+def linux_libc() -> str:
+    libc = platform.libc_ver()[0].lower()
+    # Python 3.12/3.13 can report no libc name on Alpine.
+    if not libc and any(Path("/lib").glob("ld-musl-*.so.1")):
+        return "musl"
+    return libc
 
 
 @dataclass(frozen=True)

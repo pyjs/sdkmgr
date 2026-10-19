@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from sdkmgr import Manager, SDKError, tailwind
+from sdkmgr import Manager, SDKError, providers, tailwind
 from sdkmgr.cli import main
 from sdkmgr.providers import Platform
 
@@ -19,7 +19,7 @@ PAYLOAD = b"fake executable"
 def isolate(monkeypatch):
     monkeypatch.delenv("TAILWINDCSS", raising=False)
     monkeypatch.setattr(tailwind.shutil, "which", lambda name: None)
-    monkeypatch.setattr(tailwind.platform, "libc_ver", lambda: ("glibc", "2.39"))
+    monkeypatch.setattr(providers.platform, "libc_ver", lambda: ("glibc", "2.39"))
     monkeypatch.setattr(Platform, "current", classmethod(lambda cls: HOST))
 
 
@@ -142,7 +142,7 @@ def test_version_validation(tmp_path, version):
     ("windows", "x64", "", "tailwindcss-windows-x64.exe"),
 ])
 def test_asset_selection(monkeypatch, system, arch, libc, asset):
-    monkeypatch.setattr(tailwind.platform, "libc_ver", lambda: (libc, ""))
+    monkeypatch.setattr(providers.platform, "libc_ver", lambda: (libc, ""))
     assert tailwind.asset_name(Platform(system, arch)) == asset
 
 
@@ -154,7 +154,7 @@ def test_windows_arm64_not_silently_x64():
 def test_glibc_wins_over_installed_musl_loader(monkeypatch):
     monkeypatch.setattr(Path, "glob", lambda *a: iter([Path("/lib/ld-musl-x86_64.so.1")]))
     assert tailwind.asset_name(HOST) == "tailwindcss-linux-x64"
-    monkeypatch.setattr(tailwind.platform, "libc_ver", lambda: ("", ""))
+    monkeypatch.setattr(providers.platform, "libc_ver", lambda: ("", ""))
     assert tailwind.asset_name(HOST) == "tailwindcss-linux-x64-musl"
 
 
