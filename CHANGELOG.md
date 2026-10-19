@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## 0.1.1 — 2026-10-18
+## 0.2.0 — 2026-10-18
 
 - Node and Android installation work with captured Python stderr, including
   pytest's `capsys` fixture and embedded consoles. Output goes to stderr;

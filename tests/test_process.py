@@ -1,4 +1,5 @@
 import io
+import os
 import subprocess
 import sys
 from unittest.mock import Mock
@@ -40,7 +41,7 @@ def test_installer_output_under_python_capture(monkeypatch, capsys, provider, st
             assert invoke().returncode == 0
     captured = capsys.readouterr()
     assert captured.out == ""
-    assert captured.err.endswith("progress\ndetail\n")
+    assert captured.err.endswith(f"progress{os.linesep}detail{os.linesep}")
 
 
 def test_progress_output_preserves_descriptor_stream(monkeypatch, tmp_path):
