@@ -357,7 +357,11 @@ OS repository's version, not an exact LLVM pin. It does not bootstrap package
 managers, add repositories, switch compiler alternatives, or repair an
 existing compiler automatically.
 
-Linux installation requests C development tools and Clang runtime packages.
+Linux installation requests C development tools. Debian/Ubuntu use `clang`
+and `build-essential`, relying on the distribution's compiler dependencies;
+they do not assume a cross-release sanitizer runtime package name. Requested
+sanitizer probes report missing runtimes for manual installation. Fedora/Arch
+also request `compiler-rt`.
 Homebrew installs `llvm`; macOS also needs Xcode Command Line Tools. WinGet
 installs `LLVM.LLVM`; Windows additionally needs Visual Studio C++ Build Tools
 and a Windows SDK. Those macOS/Windows prerequisites must already be present
@@ -374,6 +378,12 @@ do not establish support for every LLVM IR feature, target architecture, or
 application ABI. PyJS retains ownership of those checks and its compile flags.
 Clang paths have no dependency on PyJS environment variables: the integration
 can forward `PYJS_CLANG` explicitly.
+
+For Clang and Tailwind, `environment()` prepends the executable's entire
+directory to PATH, including shared directories such as `/usr/bin`. This can
+shadow unrelated user tools or version-manager shims in child processes.
+To preserve PATH ordering, invoke the absolute `executable()` path and omit
+`env`, or pass your unchanged environment. No parent environment is modified.
 
 ## Standalone Tailwind CSS (unreleased)
 

@@ -81,7 +81,7 @@ def install_command(host: Platform) -> tuple[str, ...]:
             raise SDKError("Cannot identify Linux distribution; install Clang manually.") from error
         identifiers = {release.get("ID", ""), *release.get("ID_LIKE", "").split()}
         if identifiers & {"debian", "ubuntu"}:
-            manager, arguments = "apt-get", ("install", "clang", "build-essential", "libclang-rt-dev")
+            manager, arguments = "apt-get", ("install", "clang", "build-essential")
         elif identifiers & {"fedora", "rhel", "centos", "rocky", "almalinux"}:
             manager, arguments = "dnf", ("install", "clang", "gcc", "glibc-devel", "compiler-rt")
         elif identifiers & {"arch", "omarchy"}:

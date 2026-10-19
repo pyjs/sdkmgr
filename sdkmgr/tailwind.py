@@ -50,7 +50,7 @@ def _version(path: Path) -> str | None:
 
 def _verify(path: Path, manifest: Path, asset: str):
     if not path.is_file() or not manifest.is_file():
-        raise SDKError(f"Incomplete Tailwind cache at {path.parent}; move it aside and retry.")
+        raise SDKError(f"Incomplete Tailwind files at {path.parent}.")
     if manifest.stat().st_size > 1024 * 1024:
         raise SDKError("Tailwind checksum manifest is too large.")
     matches = []
@@ -63,14 +63,17 @@ def _verify(path: Path, manifest: Path, asset: str):
     with path.open("rb") as source:
         digest = hashlib.file_digest(source, "sha256").hexdigest()
     if digest != matches[0]:
-        raise SDKError(f"SHA-256 mismatch for {path}; move it aside and retry.")
+        raise SDKError(f"SHA-256 mismatch for {path}.")
 
 
 def _cached(directory: Path, host: Platform, version: str, asset: str) -> ToolInstallation | None:
     if not directory.exists():
         return None
     path = directory / ("tailwindcss.exe" if host.system == "windows" else "tailwindcss")
-    _verify(path, directory / "sha256sums.txt", asset)
+    try:
+        _verify(path, directory / "sha256sums.txt", asset)
+    except SDKError as error:
+        raise SDKError(f"{error} Move {directory} aside and retry.") from error
     if _version(path) != version:
         raise SDKError(f"Cached Tailwind did not report requested version {version}.")
     return ToolInstallation("tailwindcss", version, path, host, managed=True)

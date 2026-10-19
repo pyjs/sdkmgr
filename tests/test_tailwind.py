@@ -91,7 +91,7 @@ def test_incomplete_cache_is_not_overwritten(tmp_path, downloads):
     directory.mkdir(parents=True)
     marker = directory / "keep"
     marker.write_text("existing content")
-    with pytest.raises(SDKError, match="Incomplete Tailwind cache"):
+    with pytest.raises(SDKError, match="Incomplete Tailwind files"):
         tailwind.ensure(tmp_path, HOST, VERSION)
     assert marker.read_text() == "existing content"
     assert downloads == []
@@ -187,9 +187,26 @@ def test_failed_install_never_publishes(tmp_path, monkeypatch, downloads, failur
 def test_cached_tampering_rejected_without_download(tmp_path, downloads):
     tool = Manager(tmp_path).ensure("tailwindcss", version=VERSION)
     tool.path.write_bytes(b"changed")
-    with pytest.raises(SDKError, match="SHA-256 mismatch"):
+    with pytest.raises(SDKError, match="SHA-256 mismatch") as caught:
         Manager(tmp_path).ensure("tailwindcss", version=VERSION)
+    assert f"Move {tool.path.parent} aside and retry." in str(caught.value)
+    assert tool.path.exists()
     assert len(downloads) == 2
+
+
+def test_download_checksum_failure_does_not_request_cache_repair(tmp_path, downloads, monkeypatch):
+    original = tailwind.fetch
+
+    def corrupt(url, destination, **kwargs):
+        original(url, destination, **kwargs)
+        if not url.endswith("sha256sums.txt"):
+            destination.write_bytes(b"corrupt")
+
+    monkeypatch.setattr(tailwind, "fetch", corrupt)
+    with pytest.raises(SDKError, match="SHA-256 mismatch") as caught:
+        Manager(tmp_path).ensure("tailwindcss", version=VERSION)
+    assert "aside" not in str(caught.value)
+    assert not list(tmp_path.rglob(".install-*"))
 
 
 @pytest.mark.parametrize("prefix", ["", "./", "*", "*./"])

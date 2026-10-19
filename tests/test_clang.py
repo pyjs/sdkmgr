@@ -159,7 +159,8 @@ def test_probe_failure_is_actionable_and_cleans_up(compiler, monkeypatch, failur
 
 
 @pytest.mark.parametrize("distribution,manager,packages", [
-    ("ubuntu", "apt-get", ("clang", "build-essential", "libclang-rt-dev")),
+    ("ubuntu", "apt-get", ("clang", "build-essential")),
+    ("debian", "apt-get", ("clang", "build-essential")),
     ("fedora", "dnf", ("clang", "gcc", "glibc-devel", "compiler-rt")),
     ("omarchy", "pacman", ("clang", "base-devel", "compiler-rt")),
 ])

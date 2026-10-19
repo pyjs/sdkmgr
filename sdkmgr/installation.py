@@ -30,6 +30,7 @@ class ToolInstallation:
         return self.path
 
     def environment(self, base: dict[str, str] | None = None) -> dict[str, str]:
+        """Prepend the tool directory to PATH, including for shared system bins."""
         result = dict(os.environ if base is None else base)
         result["PATH"] = str(self.path.parent) + os.pathsep + result.get("PATH", "")
         return result
