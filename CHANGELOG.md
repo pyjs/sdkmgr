@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.1 — 2026-10-19
 
 - Retry transient Windows access and sharing errors when publishing the
   verified Tailwind executable, with a bounded wait and no repeated download.
