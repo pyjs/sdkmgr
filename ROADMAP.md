@@ -36,7 +36,7 @@ The first release establishes independent provisioning before PyJS adopts it.
 
 ## Further validation and follow-up
 
-- Current unreleased validation: 292 local tests pass, including tests run
+- Current unreleased validation: 365 local tests pass, including tests run
   against isolated wheel and source installations. Ruff and diff checks pass.
   Fresh Linux Tailwind 4.3.3 download, checksum/version validation, cache
   reuse, and CSS generation pass. Existing Android API 35 and build-tools

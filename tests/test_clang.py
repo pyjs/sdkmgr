@@ -83,6 +83,18 @@ def test_manual_install_restart(compiler, monkeypatch):
     assert manager.ensure_clang().executable() == compiler
 
 
+def test_captured_console_defers_os_install(compiler, monkeypatch, capsys):
+    compiler.unlink()
+    monkeypatch.setattr(clang, "install_command", lambda host: ("apt-get", "install", "clang"))
+    monkeypatch.setattr(clang.subprocess, "run", lambda *a, **kw: pytest.fail("Must not install"))
+    assert main(["--non-interactive", "clang", "install"]) == 2
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "Clang installation requires this command" in captured.err
+    assert "apt-get install clang" in captured.err
+    assert "restart your original command" in captured.err
+
+
 def test_installer_success_is_rechecked(compiler, monkeypatch):
     compiler.unlink()
     monkeypatch.setattr(clang, "install_command", lambda host: ("installer",))

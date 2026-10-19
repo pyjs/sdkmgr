@@ -12,7 +12,7 @@ Node provisioning prefers existing mise, otherwise existing nvm, otherwise
 bootstraps mise. sdkmgr no longer downloads Node archives itself. Android
 provisioning delegates package installation to Google's command-line tools.
 The unreleased source also provisions Clang and standalone Tailwind CSS and
-resolves Android build-tool paths. These additions are not in PyPI 0.1.0 yet.
+resolves Android build-tool paths. These additions are not in PyPI 0.2.0 yet.
 
 ## Install
 
