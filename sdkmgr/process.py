@@ -1,9 +1,16 @@
-import shutil
+import os
 import subprocess
 import sys
 import tempfile
 from contextlib import contextmanager, suppress
 from io import text_encoding
+
+
+def is_terminal(stream):
+    try:
+        return os.isatty(stream.fileno())
+    except (AttributeError, OSError, ValueError):
+        return False
 
 
 @contextmanager
@@ -30,7 +37,11 @@ def progress_output(enabled=True):
                 # when a captured console closes or loses its output sink.
                 with suppress(OSError, ValueError):
                     output.seek(0)
-                    shutil.copyfileobj(output, stream)
+                    while chunk := output.read(65536):
+                        try:
+                            stream.write(chunk)
+                        except UnicodeEncodeError as error:
+                            stream.write(chunk.encode(error.encoding, "backslashreplace").decode(error.encoding))
                     stream.flush()
     else:
         yield stream

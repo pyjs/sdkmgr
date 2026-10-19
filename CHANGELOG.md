@@ -11,6 +11,9 @@
 - Preserve installer results when stderr is absent or a captured console stops
   accepting output. Replayed progress retains carriage returns and uses Python's
   default text encoding, including UTF-8 mode.
+- Require real terminal descriptors for interactive Android installs, avoiding
+  hidden prompts in embedded consoles. Escape characters unsupported by the
+  output console instead of losing the surrounding diagnostic text.
 
 ## 0.1.0 — 2026-10-18
 

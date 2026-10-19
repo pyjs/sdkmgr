@@ -15,7 +15,7 @@ from filelock import FileLock, Timeout
 
 from .download import fetch
 from .errors import InstallationRequired, SDKError
-from .process import progress_output
+from .process import is_terminal, progress_output
 from .providers import Platform
 from .system import display_command
 
@@ -250,10 +250,12 @@ def _run(sdk: AndroidInstallation, arguments, *, interactive: bool):
     command = sdk.command(*arguments)
     print(f"Running {display_command(command)}", file=sys.stderr)
     with progress_output() as output:
+        attached = (interactive and output is sys.stderr
+                    and is_terminal(sys.stdin) and is_terminal(output))
         return subprocess.run(
             command, check=False, env=sdk.environment(),
-            stdin=None if interactive else subprocess.DEVNULL,
-            stdout=output, stderr=output, timeout=None if interactive else 1200,
+            stdin=None if attached else subprocess.DEVNULL,
+            stdout=output, stderr=output, timeout=None if attached else 1200,
         )
 
 
@@ -273,9 +275,8 @@ def ensure(home: Path, host: Platform, packages, *,
             missing = tuple(p for p in packages if p not in installed)
             if not missing:
                 return sdk
-            attached = interactive is not False and sys.stdin.isatty() and sys.stderr.isatty()
             require_consent(accept_sdk_license=accept_sdk_license)
-            result = _run(sdk, ("sdk", "install", *missing), interactive=attached)
+            result = _run(sdk, ("sdk", "install", *missing), interactive=interactive is not False)
             if result.returncode:
                 raise SDKError(f"Android installer exited with status {result.returncode}; retry after resolving its error.")
             if remaining := tuple(p for p in packages if p not in sdk.installed()):

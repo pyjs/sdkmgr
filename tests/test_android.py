@@ -1,7 +1,9 @@
 import hashlib
+import io
 import os
 import stat
 import subprocess
+import sys
 import zipfile
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -273,6 +275,37 @@ def test_success_exit_does_not_hide_missing_packages(tmp_path, monkeypatch):
     with pytest.raises(InstallationRequired, match="packages still missing") as caught:
         android.ensure(tmp_path, HOST, ("platform-tools",), interactive=False, accept_sdk_license=True)
     assert caught.value.command == sdk.command("sdk", "install", "platform-tools")
+
+
+@pytest.mark.parametrize("interactive", [None, True, False])
+@pytest.mark.parametrize("console", ["terminal", "spooled", "missing", "missing-input", "buffered-input"])
+def test_interactive_install_requires_live_terminal_descriptors(tmp_path, monkeypatch, interactive, console):
+    sdk = tools(tmp_path)
+    stdin, stderr = io.StringIO(), io.StringIO()
+    # Model consoles that advertise a TTY even without inheritable handles.
+    monkeypatch.setattr(stdin, "isatty", lambda: True)
+    monkeypatch.setattr(stderr, "isatty", lambda: True)
+    if console != "buffered-input":
+        monkeypatch.setattr(stdin, "fileno", lambda: 0)
+    if console != "spooled":
+        monkeypatch.setattr(stderr, "fileno", lambda: 2)
+    monkeypatch.setattr(sys, "stdin", None if console == "missing-input" else stdin)
+    monkeypatch.setattr(sys, "stderr", None if console == "missing" else stderr)
+    monkeypatch.setattr(os, "isatty", lambda descriptor: descriptor in (0, 2))
+    calls = []
+
+    def run(command, **options):
+        calls.append(options)
+        package(tmp_path, "platform-tools")
+        return subprocess.CompletedProcess(command, 0)
+
+    monkeypatch.setattr(android.subprocess, "run", run)
+    assert android.ensure(tmp_path, HOST, ("platform-tools",), interactive=interactive,
+                          accept_sdk_license=True) == sdk
+    options, = calls
+    attached = console == "terminal" and interactive is not False
+    assert options["stdin"] == (None if attached else subprocess.DEVNULL)
+    assert options["timeout"] == (None if attached else 1200)
 
 
 @pytest.mark.parametrize("failure", ["status", "timeout", "missing-executable"])

@@ -135,3 +135,27 @@ def test_replay_failure_preserves_outcome(monkeypatch, operation, error_type, ou
         with pytest.raises(type(outcome)) as caught:
             invoke()
         assert caught.value is outcome
+
+
+@pytest.mark.parametrize("prefix_size", [0, 65535])
+@pytest.mark.parametrize("status", [0, 7])
+def test_replay_escapes_unencodable_text_without_losing_diagnostics(monkeypatch, prefix_size, status):
+    raw = io.BytesIO()
+    stream = io.TextIOWrapper(raw, encoding="ascii", errors="strict", newline="")
+    monkeypatch.setattr(sys, "stderr", stream)
+    monkeypatch.setattr(process, "text_encoding", lambda value: "utf-8")
+    message = "x" * prefix_size + "✓\nERROR: checksum mismatch\n" + "y" * 65536
+
+    def invoke():
+        with progress_output() as output:
+            output.write(message)
+            if status:
+                raise subprocess.CalledProcessError(status, "installer")
+
+    if status:
+        with pytest.raises(subprocess.CalledProcessError) as caught:
+            invoke()
+        assert caught.value.returncode == status
+    else:
+        invoke()
+    assert raw.getvalue() == message.encode("ascii", "backslashreplace")
