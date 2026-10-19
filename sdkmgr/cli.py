@@ -6,12 +6,17 @@ from .android import installed_packages, sdk_root
 
 
 def main(argv=None) -> int:
-    parser = argparse.ArgumentParser(description="Provision Node, Java 21/25, and Android SDK packages.")
+    parser = argparse.ArgumentParser(description="Provision Node, Java, Clang, Tailwind, and Android SDK packages.")
     parser.add_argument("--version", action="version", version=__version__)
-    parser.add_argument("--root", help="Private manager bootstrap directory")
-    parser.add_argument("--non-interactive", action="store_true", help="Never prompt; defer JDK installs")
+    parser.add_argument("--root", help="Private manager and standalone-tool directory")
+    parser.add_argument("--non-interactive", action="store_true", help="Never prompt; defer OS package installs")
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("list", help="List selected-manager Node and discovered JDK installations")
+    clang_parser = commands.add_parser("clang", help="Find or provision and validate host Clang")
+    clang_parser.add_argument("clang_command", choices=("which", "install"))
+    clang_parser.add_argument("--executable", help="Use this compiler without installing a replacement")
+    clang_parser.add_argument("--sanitizer", action="append", default=[], choices=("address", "undefined"),
+                              help="Also verify sanitizer linking during install")
     android_parser = commands.add_parser("android", help="Manage Android SDK packages")
     android_parser.add_argument("--sdk-root", help="Override ANDROID_HOME and the standard SDK location")
     android_commands = android_parser.add_subparsers(dest="android_command", required=True)
@@ -22,10 +27,21 @@ def main(argv=None) -> int:
                                  help="Confirm acceptance of Google's SDK and requested package licenses")
     for command in ("install", "which"):
         subparser = commands.add_parser(command)
-        subparser.add_argument("sdk", help="node@X.Y.Z, java@21, or java@25")
+        subparser.add_argument("sdk", help="node@X.Y.Z, java@21, java@25, or tailwindcss@X.Y.Z")
     args = parser.parse_args(argv)
     try:
         manager = Manager(args.root, interactive=False if args.non_interactive else None)
+        if args.command == "clang":
+            if args.clang_command == "install":
+                compiler = manager.ensure_clang(executable=args.executable, sanitizers=args.sanitizer)
+            else:
+                if args.sanitizer:
+                    raise SDKError("Sanitizer validation requires sdkmgr clang install, not which.")
+                compiler = manager.find_clang(executable=args.executable)
+                if compiler is None:
+                    raise SDKError("Clang was not found; run sdkmgr clang install.")
+            print(compiler.executable())
+            return 0
         if args.command == "android":
             if args.android_command == "install":
                 sdk = manager.ensure_android(args.packages, sdk_root=args.sdk_root,

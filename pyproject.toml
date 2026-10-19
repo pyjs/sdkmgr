@@ -5,13 +5,13 @@ build-backend = "hatchling.build"
 [project]
 name = "sdkmgr"
 dynamic = ["version"]
-description = "Discover and provision Node, Java, and Android development tools."
+description = "Discover and provision Node, Java, Clang, Tailwind, and Android development tools."
 readme = "README.md"
 requires-python = ">=3.12"
 license = "BSD-3-Clause"
 license-files = ["LICENSE"]
 authors = [{name = "Lex Berezhny", email = "lex@damoti.com"}]
-keywords = ["sdk", "node", "java", "android", "toolchain"]
+keywords = ["sdk", "node", "java", "android", "clang", "tailwind", "toolchain"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",

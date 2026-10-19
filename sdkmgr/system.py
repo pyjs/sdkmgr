@@ -10,14 +10,14 @@ def display_command(command: tuple[str, ...]) -> str:
     return subprocess.list2cmdline(command) if os.name == "nt" else shlex.join(command)
 
 
-def install_package(command: tuple[str, ...], *, interactive: bool | None):
+def install_package(command: tuple[str, ...], *, interactive: bool | None, label: str = "JDK"):
     """Ask before installing; leave authentication to sudo or the OS installer.
 
     Standard input remains attached to the terminal. Passwords never pass
     through sdkmgr, and package-manager output does not pollute CLI stdout.
     """
     rendered = display_command(command)
-    print(f"JDK installation requires this command:\n\n  {rendered}\n", file=sys.stderr)
+    print(f"{label} installation requires this command:\n\n  {rendered}\n", file=sys.stderr)
     if any(os.path.basename(part) == "pacman" for part in command):
         print(
             "Arch requires complete system updates. If packages are unavailable,\n"
@@ -40,12 +40,12 @@ def install_package(command: tuple[str, ...], *, interactive: bool | None):
     )
     answer = sys.stdin.readline()
     if answer == "" or answer.strip():
-        raise InstallationRequired(command, "Installation deferred; rerun after installing the JDK.")
+        raise InstallationRequired(command, f"Installation deferred; rerun after installing {label}.")
     try:
         subprocess.run(command, check=True, stdout=sys.stderr, stderr=sys.stderr)
     except subprocess.CalledProcessError as error:
         raise SDKError(
-            f"JDK installation exited with status {error.returncode}. "
+            f"{label} installation exited with status {error.returncode}. "
             f"Resolve the package-manager error, then retry. Command: {rendered}"
         ) from error
     except OSError as error:

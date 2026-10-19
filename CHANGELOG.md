@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Discover and provision host Clang through OS package managers, with explicit
+  consent and C/LLVM IR compile/link validation. Report missing platform SDKs
+  and optionally check sanitizer linking without running generated programs.
+- Provision exact standalone Tailwind versions with platform/libc selection,
+  release checksums, install locks, atomic cache publication, and reuse of
+  matching installed executables.
+- Resolve exact Android build-tool versions and platform jars, including
+  Windows executable/script suffixes, without installing during lookup.
+
 ## 0.2.0 — 2026-10-18
 
 - Node and Android installation work with captured Python stderr, including

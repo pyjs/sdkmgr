@@ -36,6 +36,14 @@ The first release establishes independent provisioning before PyJS adopts it.
 
 ## Further validation and follow-up
 
+- Initial unreleased validation: 365 local tests passed, including tests run
+  against isolated wheel and source installations. Ruff and diff checks pass.
+  Fresh Linux Tailwind 4.3.3 download, checksum/version validation, cache
+  reuse, and CSS generation pass. Existing Android API 35 and build-tools
+  35.0.1 lookups pass without changing SDK packages.
+- Manual-dispatch CI verifies real Clang linking and Tailwind download, cache
+  reuse, and CSS generation on Linux, macOS, and Windows. Colored Tailwind
+  banners and explicit relative executable selection have regression coverage.
 - Smoke-test real package installations on supported systems and ARM64.
 - Update the CI action versions to remove GitHub's Node 20 deprecation
   warnings; the current actions pass under its Node 24 compatibility mode.
@@ -46,11 +54,17 @@ The first release establishes independent provisioning before PyJS adopts it.
 - Validate real Android bootstrap/package installs on Windows and macOS;
   Linux bootstrap, temporary API 35 installation, and no-op retries pass.
 - Add an opt-in Android provisioning CI smoke after explicit license review.
-- Next version: provision LLVM compilation dependencies; keep these outside
-  the initial release's Node/JDK/Android scope.
+- Unreleased Clang provisioning and C/LLVM IR link probes are implemented.
+  Linux validates against the existing Clang 21.1.8, including address and
+  undefined sanitizer linking. Verify real OS installation and macOS/Windows
+  prerequisites before claiming those installation paths are validated.
 - Reuse inactive versions from popular installed runtime managers.
 - Add a project manifest and lock file before supporting version ranges.
-- Evaluate browser, LLVM, Gradle, and other PyJS tool requirements individually.
+- Unreleased Tailwind provisioning and exact Android build-tool/platform
+  lookup are implemented. Complete PyJS adoption with its integration agent;
+  PyJS runners and compilation flags remain outside sdkmgr.
+- Evaluate browser and other PyJS tool requirements individually. Maven
+  dependency resolution and Gradle orchestration remain outside this slice.
 - Add cache inspection, repair, and removal without deleting external SDKs.
 - Evaluate additional provider-owned package verification beyond sdkmgr's
   existing version and required-file checks.

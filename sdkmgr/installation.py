@@ -1,10 +1,39 @@
 import os
+import shutil
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
 from .errors import SDKError
 from .providers import Platform, reported_version
+
+
+def executable_path(executable: str | Path) -> Path:
+    # Preserve './' before which(): Path would turn './clang' into a PATH name.
+    expanded = os.path.expanduser(os.fspath(executable))
+    if isinstance(executable, str):
+        expanded = shutil.which(expanded) or expanded
+    return Path(expanded).absolute()
+
+
+@dataclass(frozen=True)
+class ToolInstallation:
+    """An executable which need not live in an SDK's bin directory."""
+
+    tool: str
+    version: str
+    path: Path
+    platform: Platform
+    managed: bool = False
+
+    def executable(self) -> Path:
+        return self.path
+
+    def environment(self, base: dict[str, str] | None = None) -> dict[str, str]:
+        """Prepend the tool directory to PATH, including for shared system bins."""
+        result = dict(os.environ if base is None else base)
+        result["PATH"] = str(self.path.parent) + os.pathsep + result.get("PATH", "")
+        return result
 
 
 @dataclass(frozen=True)
