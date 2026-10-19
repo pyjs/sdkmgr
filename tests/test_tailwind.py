@@ -70,6 +70,58 @@ def test_concurrent_install_rechecks_under_lock(tmp_path, monkeypatch, downloads
     assert len(downloads) == 2
 
 
+@pytest.mark.parametrize("winerror", [5, 32])
+def test_publication_recovers_from_windows_lock(tmp_path, monkeypatch, downloads, winerror):
+    replace = tailwind.os.replace
+    attempts = []
+    sleeps = []
+
+    def locked_once(source, destination):
+        attempts.append((source, destination))
+        assert not destination.exists()
+        assert (source / "tailwindcss").read_bytes() == PAYLOAD
+        if len(attempts) == 1:
+            error = PermissionError("Executable is still locked")
+            error.winerror = winerror
+            raise error
+        replace(source, destination)
+
+    monkeypatch.setattr(tailwind.os, "replace", locked_once)
+    monkeypatch.setattr(tailwind.time, "sleep", sleeps.append)
+    tool = Manager(tmp_path).ensure("tailwindcss", version=VERSION)
+    assert tool.path.read_bytes() == PAYLOAD
+    assert len(attempts) == 2
+    assert attempts[0] == attempts[1]
+    assert sleeps == [0.05]
+    assert len(downloads) == 2
+    assert not list(tmp_path.rglob(".install-*"))
+
+
+@pytest.mark.parametrize("winerror,attempts", [(5, 7), (32, 7), (2, 1), (None, 1)])
+def test_publication_errors_are_bounded(tmp_path, monkeypatch, downloads, winerror, attempts):
+    failure = PermissionError("Cannot publish")
+    if winerror is not None:
+        failure.winerror = winerror
+    calls = []
+    sleeps = []
+
+    def fail(source, destination):
+        calls.append((source, destination))
+        raise failure
+
+    monkeypatch.setattr(tailwind.os, "replace", fail)
+    monkeypatch.setattr(tailwind.time, "sleep", sleeps.append)
+    with pytest.raises(SDKError, match="Could not install Tailwind: Cannot publish") as caught:
+        Manager(tmp_path).ensure("tailwindcss", version=VERSION)
+    assert caught.value.__cause__ is failure
+    assert len(calls) == attempts
+    assert len(sleeps) == attempts - 1
+    assert sum(sleeps) == pytest.approx(3.15 if attempts > 1 else 0)
+    assert not calls[0][1].exists()
+    assert len(downloads) == 2
+    assert not list(tmp_path.rglob(".install-*"))
+
+
 def test_lock_timeout_is_diagnostic(tmp_path, monkeypatch):
     class Locked:
         def __init__(self, path, **kwargs):

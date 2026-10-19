@@ -5,6 +5,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 from filelock import FileLock, Timeout
@@ -95,6 +96,20 @@ def find(root: Path, host: Platform, version: str, *, executable=None) -> ToolIn
         raise SDKError(f"Cannot inspect Tailwind installation: {error}") from error
 
 
+def _publish(staged: Path, directory: Path):
+    # Windows can briefly retain an executable lock after the version probe.
+    delays = iter((0.05, 0.1, 0.2, 0.4, 0.8, 1.6))
+    while True:
+        try:
+            os.replace(staged, directory)
+            return
+        except OSError as error:
+            delay = next(delays, None)
+            if getattr(error, "winerror", None) not in {5, 32} or delay is None:
+                raise
+            time.sleep(delay)
+
+
 def ensure(root: Path, host: Platform, version: str, *, executable=None) -> ToolInstallation:
     if existing := find(root, host, version, executable=executable):
         return existing
@@ -118,7 +133,7 @@ def ensure(root: Path, host: Platform, version: str, *, executable=None) -> Tool
                 binary.chmod(0o755)
                 if _version(binary) != version:
                     raise SDKError(f"Downloaded Tailwind did not report version {version}.")
-                os.replace(staged, directory)
+                _publish(staged, directory)
             result = _cached(directory, host, version, asset)
             assert result is not None
             return result
