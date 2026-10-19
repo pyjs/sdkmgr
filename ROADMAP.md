@@ -38,12 +38,12 @@ The first release establishes independent provisioning before PyJS adopts it.
 
 - Browser discovery and pinned Chrome for Testing provisioning, installer-free
   Android SDK inspection, and checksum-addressed artifact acquisition are
-  implemented in unreleased source. Editable-source integration is being
-  exercised before the next release and downstream dependency update.
+  implemented for 0.3.0. Editable-source integration has been exercised;
+  the downstream dependency update follows publication.
 - Linux pinned browser download, reuse, and headless rendering pass. This
   Ubuntu host needs an explicit test-only sandbox option; no host policy was
-  changed. Browser discovery does not imply launch compatibility. Real macOS
-  and Windows browser smokes remain part of the release gate.
+  changed. Browser discovery does not imply launch compatibility. Real Linux,
+  macOS and Windows browser installation/reuse/rendering smokes pass.
 - Initial unreleased validation: 365 local tests passed, including tests run
   against isolated wheel and source installations. Ruff and diff checks pass.
   Fresh Linux Tailwind 4.3.3 download, checksum/version validation, cache
@@ -55,21 +55,20 @@ The first release establishes independent provisioning before PyJS adopts it.
 - Smoke-test real package installations on supported systems and ARM64.
 - Update the CI action versions to remove GitHub's Node 20 deprecation
   warnings; the current actions pass under its Node 24 compatibility mode.
-- Integrate Node and JDK provisioning into PyJS without changing its runners:
-  keep the developer's local nvm; install mise explicitly in PyJS CI so both
-  provider paths are exercised regularly. This awaits PyJS adoption of sdkmgr.
+- PyJS already uses Node and JDK provisioning without replacing its runners.
+  Complete adoption of the additional 0.3.0 APIs after publication.
 - Verify real nvm-windows v1/v2 installations, beyond simulated commands.
 - Validate real Android bootstrap/package installs on Windows and macOS;
   Linux bootstrap, temporary API 35 installation, and no-op retries pass.
 - Add an opt-in Android provisioning CI smoke after explicit license review.
-- Unreleased Clang provisioning and C/LLVM IR link probes are implemented.
+- Clang provisioning and C/LLVM IR link probes are included in 0.3.0.
   Linux validates against the existing Clang 21.1.8, including address and
   undefined sanitizer linking. Verify real OS installation and macOS/Windows
   prerequisites before claiming those installation paths are validated.
 - Reuse inactive versions from popular installed runtime managers.
 - Add a project manifest and lock file before supporting version ranges.
-- Unreleased Tailwind provisioning and exact Android build-tool/platform
-  lookup are implemented. Complete PyJS adoption with its integration agent;
+- Tailwind provisioning and exact Android build-tool/platform lookup are
+  included in 0.3.0. Complete PyJS adoption after publication;
   PyJS runners and compilation flags remain outside sdkmgr.
 - Evaluate browser and other PyJS tool requirements individually. Maven
   dependency resolution and Gradle orchestration remain outside this slice.
