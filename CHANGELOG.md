@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Retry transient Windows access and sharing errors when publishing the
+  verified Tailwind executable, with a bounded wait and no repeated download.
+
 ## 0.3.0 — 2026-10-19
 
 - Discover Chrome/Chromium without launching it; optionally provision pinned,
