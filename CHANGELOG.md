@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.0 — 2026-10-19
 
 - Discover Chrome/Chromium without launching it; optionally provision pinned,
   checksum-verified Chrome for Testing with explicit managed selection.
