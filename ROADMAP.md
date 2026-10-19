@@ -1,6 +1,10 @@
 # Roadmap
 
-## 0.3.1 prepared
+## 0.3.1 published
+
+- Published to PyPI with source tagged `v0.3.1`. Both archive hashes match the
+  inspected artifacts; a fresh registry installation reports 0.3.1 through
+  the CLI, library and distribution metadata.
 
 - Bound retries for Windows access/sharing errors during Tailwind cache
   publication. Persistent errors still fail; checksums and atomicity remain
