@@ -2,6 +2,17 @@
 
 The first release establishes independent provisioning before PyJS adopts it.
 
+## 0.2.0 published
+
+- Published to PyPI with source tagged `v0.2.0`. Both published archive hashes
+  match the inspected artifacts; a fresh registry installation passes CLI,
+  library and captured-output smoke checks.
+- Captured installer consoles, missing stderr, bounded embedded Android
+  execution and diagnostic escaping are supported. Installation consent and
+  provider selection remain unchanged.
+- Follow-up: harden replay against custom console streams that advertise
+  invalid or inaccurate encoding metadata.
+
 ## Initial release complete
 
 - Version 0.1.0 was published to PyPI on 2026-10-18 with user approval.
