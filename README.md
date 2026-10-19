@@ -11,7 +11,8 @@ vendor requirement for existing installations, or exact patch-version pinning.
 Node provisioning prefers existing mise, otherwise existing nvm, otherwise
 bootstraps mise. sdkmgr no longer downloads Node archives itself. Android
 provisioning delegates package installation to Google's command-line tools.
-LLVM compilation dependencies follow in a later version.
+The unreleased source also provisions Clang and standalone Tailwind CSS and
+resolves Android build-tool paths. These additions are not in PyPI 0.1.0 yet.
 
 ## Install
 
@@ -95,7 +96,18 @@ sdk = Manager().ensure_android(
 )
 adb = sdk.executable("adb")
 environment = sdk.environment()
+
+# Select exact packages; lookup never installs or selects a newer revision.
+aapt2 = sdk.build_tool("aapt2", version="35.0.1")
+d8 = sdk.build_tool("d8", version="35.0.1")
+android_jar = sdk.platform_jar(35)
 ```
+
+Build-tool lookup supports `aapt`, `aapt2`, `aidl`, `d8`, `dexdump`, `zipalign`,
+and `apksigner`, including Windows `.exe`/`.bat` names. Missing files receive
+package-specific diagnostics. Lookup also works for existing SDKs whose
+files are present without local package records. It does not verify package
+checksums or create signing keys.
 
 The returned environment sets SDK paths without changing your shell. Emulator
 packages and system images must be requested explicitly. Provisioning never
@@ -316,6 +328,87 @@ location is not recognized, set `JAVA_HOME` and retry. Long-running interactive
 package installations are not given an arbitrary timeout while authentication
 or user confirmation may be pending.
 
+## Clang and LLVM toolchains (unreleased)
+
+```sh
+sdkmgr clang which
+sdkmgr clang install
+sdkmgr clang install --sanitizer address --sanitizer undefined
+```
+
+```python
+from sdkmgr import Manager
+
+manager = Manager(interactive=False)
+compiler = manager.ensure_clang()
+clang = compiler.executable()
+environment = compiler.environment()
+```
+
+`find_clang()` discovers and checks the compiler version without installing
+or compiling. Selection is an explicit `executable=...` (CLI `--executable`),
+then `CLANG`, then PATH and platform locations. Explicit selections fail
+rather than falling back. Apple Clang is accepted; its reported version is
+not an upstream LLVM version guarantee.
+
+`ensure_clang()` installs missing Clang through apt, dnf, pacman, Homebrew, or
+WinGet with the same confirmation and manual-retry flow as Java. It uses the
+OS repository's version, not an exact LLVM pin. It does not bootstrap package
+managers, add repositories, switch compiler alternatives, or repair an
+existing compiler automatically.
+
+Linux installation requests C development tools and Clang runtime packages.
+Homebrew installs `llvm`; macOS also needs Xcode Command Line Tools. WinGet
+installs `LLVM.LLVM`; Windows additionally needs Visual Studio C++ Build Tools
+and a Windows SDK. Those macOS/Windows prerequisites must already be present
+or installed manually. A developer terminal may be needed on Windows.
+
+After discovery or installation, `ensure_clang()` compiles and links a small
+C executable using libc and a separate LLVM IR shared library. It never runs
+the outputs and removes the temporary files. Requested sanitizer checks cover
+linking, not sanitizer runtime execution. Existing compiler validation is
+also available as `compiler.validate(sanitizers=("address",))`.
+
+These checks diagnose missing headers, linkers, and runtime libraries; they
+do not establish support for every LLVM IR feature, target architecture, or
+application ABI. PyJS retains ownership of those checks and its compile flags.
+Clang paths have no dependency on PyJS environment variables: the integration
+can forward `PYJS_CLANG` explicitly.
+
+## Standalone Tailwind CSS (unreleased)
+
+```sh
+sdkmgr install tailwindcss@4.3.3
+sdkmgr which tailwindcss@4.3.3
+```
+
+```python
+tailwind = manager.ensure("tailwindcss", version="4.3.3")
+executable = tailwind.executable()
+environment = tailwind.environment()
+```
+
+An exact-version `TAILWINDCSS` override or executable on PATH is reused.
+An invalid explicit override fails rather than silently downloading a
+replacement. Otherwise sdkmgr downloads the official standalone executable
+into its private tool cache. Node is not required.
+
+Downloads are versioned, locked, staged, checked against the release's
+`sha256sums.txt`, and version-validated before publication to the cache.
+Cached binaries are rehashed on lookup. Interrupted downloads are discarded;
+corrupt caches receive a repair diagnostic instead of being overwritten.
+The checksum manifest comes from the same upstream release as the executable;
+it is not an independently pinned signature or trust root.
+
+Supported downloads cover Linux x64/ARM64 with glibc or musl, macOS x64/ARM64,
+and Windows x64. Windows ARM64 needs an explicitly installed compatible
+executable; sdkmgr does not silently substitute the x64 build. CSS input,
+application dependencies, and build execution remain the caller's concern.
+
+The generic `list` command still lists Node and Java installations only.
+Use `clang which`, `which tailwindcss@X.Y.Z`, and `android list` for the
+other tools.
+
 ## Development
 
 Python 3.12 or newer is required. Activate the environment after `uv sync`:
@@ -353,3 +446,17 @@ python scripts/smoke_node.py nvm
 The mise smoke uses temporary storage. The nvm smoke installs into the detected
 nvm store: use a disposable `NVM_DIR` when testing missing versions. Native
 nvm-windows installation still needs a real Windows smoke test.
+
+Additional opt-in smokes cover the new tools:
+
+```sh
+python scripts/smoke_tools.py clang --sanitizer address
+python scripts/smoke_tools.py tailwindcss
+```
+
+The Clang smoke requires an existing compiler and never installs OS packages.
+The Tailwind smoke uses a temporary cache, or reuses an exact-version tool
+already on PATH. Both clean up their temporary files. Real Linux checks pass;
+macOS/Windows provisioning and link checks still need live validation.
+The `tool-provider` CI job runs these smokes on all three operating systems
+when the Tests workflow is dispatched manually; it does not run on every push.

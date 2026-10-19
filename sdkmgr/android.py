@@ -146,6 +146,33 @@ class AndroidInstallation:
     def installed(self) -> dict[str, str]:
         return installed_packages(self.home)
 
+    def build_tool(self, name: str, *, version: str) -> Path:
+        """Resolve a tool from one exact installed build-tools revision."""
+        allowed = {"aapt", "aapt2", "aidl", "d8", "dexdump", "zipalign", "apksigner"}
+        if name not in allowed:
+            raise SDKError(f"Unknown Android build tool: {name!r}.")
+        if not isinstance(version, str) or not re.fullmatch(r"\d+\.\d+\.\d+(?:-rc\d+)?", version):
+            raise SDKError("Android build tools require an exact version, for example 35.0.1.")
+        suffix = ""
+        if self.platform.system == "windows":
+            suffix = ".bat" if name in {"d8", "apksigner"} else ".exe"
+        return self._package_file(f"build-tools/{version}", name + suffix)
+
+    def platform_jar(self, api: int) -> Path:
+        """Resolve android.jar for a released integer API level, without installing."""
+        if type(api) is not int or api <= 0:
+            raise SDKError("Android API level must be a positive integer.")
+        return self._package_file(f"platforms/android-{api}", "android.jar")
+
+    def _package_file(self, package: str, name: str) -> Path:
+        path = self.home.joinpath(*package.split("/"), name)
+        if not path.is_file():
+            raise SDKError(
+                f"Android package {package} is missing {name} at {path}. "
+                "Install the package, or repair it if already registered."
+            )
+        return path
+
     def command(self, *arguments: str) -> tuple[str, ...]:
         return (str(self.executable()), "--no-metrics", f"--sdk={self.home}", *arguments)
 

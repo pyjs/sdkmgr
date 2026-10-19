@@ -8,6 +8,25 @@ from .providers import Platform, reported_version
 
 
 @dataclass(frozen=True)
+class ToolInstallation:
+    """An executable which need not live in an SDK's bin directory."""
+
+    tool: str
+    version: str
+    path: Path
+    platform: Platform
+    managed: bool = False
+
+    def executable(self) -> Path:
+        return self.path
+
+    def environment(self, base: dict[str, str] | None = None) -> dict[str, str]:
+        result = dict(os.environ if base is None else base)
+        result["PATH"] = str(self.path.parent) + os.pathsep + result.get("PATH", "")
+        return result
+
+
+@dataclass(frozen=True)
 class Installation:
     """Resolved tool paths; environment() returns a complete subprocess environment."""
 

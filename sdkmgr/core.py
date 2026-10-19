@@ -2,19 +2,19 @@ from pathlib import Path
 
 from platformdirs import user_data_path
 
-from . import android, bootstrap, java, mise, nvm
+from . import android, bootstrap, clang, java, mise, nvm, tailwind
 from .errors import SDKError
-from .installation import Installation, validated_node
+from .installation import Installation, ToolInstallation, validated_node
 from .providers import Platform, validate_node_version
 from .system import install_package
 
 
 class Manager:
-    """Provision Node through mise/nvm and Java 21/25 through OS packages.
+    """Provision Node, Java, Clang, Tailwind, and Android development tools.
 
     Existing mise takes precedence over nvm; with neither installed, ensure()
     bootstraps a pinned mise under root. find() and installed() never install.
-    Java package installation requires terminal confirmation; interactive=False
+    OS package installation requires terminal confirmation; interactive=False
     raises InstallationRequired instead. Authentication belongs to the OS.
     """
 
@@ -35,11 +35,13 @@ class Manager:
 
     def _check_tool(self, tool: str, version: str):
         if tool != "node":
-            raise SDKError(f"Unknown tool: {tool!r}; expected node or java.")
+            raise SDKError(f"Unknown tool: {tool!r}; expected node, java, or tailwindcss.")
         validate_node_version(version)
 
-    def ensure(self, tool: str, *, version: str) -> Installation:
+    def ensure(self, tool: str, *, version: str) -> Installation | ToolInstallation:
         """Return a matching installation, installing only when discovery fails."""
+        if tool == "tailwindcss":
+            return tailwind.ensure(self.root, self.platform, version)
         if tool == "java":
             if existing := self.find(tool, version=version):
                 return existing
@@ -59,8 +61,10 @@ class Manager:
             return validated_node(home, version, self.platform)
         raise SDKError(f"{provider.__name__.rsplit('.', 1)[-1]} completed, but Node {version} was not found.")
 
-    def find(self, tool: str, *, version: str) -> Installation | None:
+    def find(self, tool: str, *, version: str) -> Installation | ToolInstallation | None:
         """Look up an installation without downloading anything."""
+        if tool == "tailwindcss":
+            return tailwind.find(self.root, self.platform, version)
         if tool == "java":
             found = java.find(self.platform, version)
             return Installation(tool, found[1], found[0], self.platform) if found else None
@@ -86,6 +90,28 @@ class Manager:
     def find_android(self, *, sdk_root: str | Path | None = None) -> android.AndroidInstallation | None:
         """Discover Android command-line tools without installing or running them."""
         return android.find(android.sdk_root(self.platform, sdk_root), self.platform)
+
+    def find_clang(self, *, executable: str | Path | None = None) -> clang.ClangInstallation | None:
+        """Find Clang using an explicit path, CLANG, or host locations; do not compile."""
+        return clang.find(self.platform, executable)
+
+    def ensure_clang(self, *, executable: str | Path | None = None,
+                     sanitizers=()) -> clang.ClangInstallation:
+        """Provision OS Clang if absent, then validate host C and LLVM IR linking.
+
+        OS package versions are not pinned. Missing platform SDKs or incompatible
+        existing compilers receive diagnostics, never silent replacements.
+        """
+        sanitizers = clang.validate_sanitizers(sanitizers)
+        result = self.find_clang(executable=executable)
+        if result is None:
+            install_package(clang.install_command(self.platform),
+                            interactive=self.interactive, label="Clang")
+            result = self.find_clang(executable=executable)
+            if result is None:
+                raise SDKError("Installation completed, but Clang was not found. Set CLANG and retry.")
+        result.validate(sanitizers=sanitizers)
+        return result
 
     def ensure_android(self, packages=(), *, sdk_root: str | Path | None = None,
                        accept_sdk_license: bool = False) -> android.AndroidInstallation:
