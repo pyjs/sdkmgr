@@ -1,6 +1,15 @@
 # Roadmap
 
-The first release establishes independent provisioning before PyJS adopts it.
+## 0.3.0 published
+
+- Published to PyPI with source tagged `v0.3.0`. Published wheel and source
+  archive hashes match the inspected artifacts. A fresh registry installation
+  reports 0.3.0 through the CLI, library and distribution metadata.
+- Browser provisioning, Android inspection, locked artifacts, Clang and
+  Tailwind are available. Real provider smokes pass on Linux, macOS and Windows
+  at the approved release candidate; the merged release tree is identical.
+- Follow-up: include browser/Chrome in the package summary and keywords in a
+  future release. The 0.3.0 long description documents the browser APIs.
 
 ## 0.2.0 published
 
@@ -44,7 +53,7 @@ The first release establishes independent provisioning before PyJS adopts it.
   Ubuntu host needs an explicit test-only sandbox option; no host policy was
   changed. Browser discovery does not imply launch compatibility. Real Linux,
   macOS and Windows browser installation/reuse/rendering smokes pass.
-- Initial unreleased validation: 365 local tests passed, including tests run
+- Initial pre-release validation: 365 local tests passed, including tests run
   against isolated wheel and source installations. Ruff and diff checks pass.
   Fresh Linux Tailwind 4.3.3 download, checksum/version validation, cache
   reuse, and CSS generation pass. Existing Android API 35 and build-tools
