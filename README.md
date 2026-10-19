@@ -11,8 +11,9 @@ vendor requirement for existing installations, or exact patch-version pinning.
 Node provisioning prefers existing mise, otherwise existing nvm, otherwise
 bootstraps mise. sdkmgr no longer downloads Node archives itself. Android
 provisioning delegates package installation to Google's command-line tools.
-The unreleased source also provisions Clang and standalone Tailwind CSS and
-resolves Android build-tool paths. These additions are not in PyPI 0.2.0 yet.
+The unreleased source also provisions Clang, Tailwind CSS, and Chrome for
+Testing, resolves Android build-tool paths, and caches checksum-locked files.
+These additions are not in PyPI 0.2.0 yet.
 
 ## Install
 
@@ -419,7 +420,82 @@ The generic `list` command still lists Node and Java installations only.
 Use `clang which`, `which tailwindcss@X.Y.Z`, and `android list` for the
 other tools.
 
-## Development
+## Browser discovery and provisioning (unreleased)
+
+```sh
+sdkmgr browser which
+sdkmgr browser install
+sdkmgr browser install --managed
+```
+
+```python
+browser = manager.find_browser()  # No downloads or browser processes.
+browser = manager.ensure_browser()  # Download only when none is found.
+pinned = manager.ensure_browser(managed=True)
+executable = pinned.executable()
+```
+
+Discovery checks an explicit `executable`, then `CHROME_BIN`, PATH, standard
+Chrome/Chromium locations, and the pinned cache. A missing or non-executable
+explicit selection is an error, not permission to download a replacement.
+Discovery does not launch browsers or infer installed versions; external
+installations have `version=None`. `managed=True` ignores PATH and `CHROME_BIN`
+and selects only the pinned Chrome for Testing copy. It cannot be combined
+with an explicit executable. The CLI exposes `--executable` and `--managed`.
+
+The managed provider pins Chrome for Testing **155.0.8059.84** and archive
+SHA-256 values for Linux glibc x64/ARM64, macOS x64/ARM64, and Windows x64.
+Musl hosts need an existing compatible Chromium. The pins
+were calculated from Google's official HTTPS archives; they are not publisher
+signatures. Downloads are locked, verified, extracted into bounded staging,
+and published atomically. macOS framework symlinks must stay within the
+extracted application. Installed files are not rehashed on each discovery;
+the retained download is verified whenever the artifact cache reads it.
+
+sdkmgr does not install browser OS libraries, configure Linux sandboxes, set
+a default browser, create profiles, or control browser processes. A browser
+found on disk can still fail at launch due to missing host prerequisites.
+Browser testing libraries retain that responsibility. Windows ARM64 needs an
+existing compatible browser rather than a silently substituted x64 download.
+
+## Android SDK inspection without an installer (unreleased)
+
+```python
+sdk = manager.inspect_android(sdk_root="/path/to/sdk")
+if sdk is not None:
+    platform = sdk.platform_jar(35)
+    compiler = sdk.build_tool("d8", version="35.0.1")
+```
+
+`inspect_android()` accepts any existing SDK directory without requiring
+Google's installer CLI, package records, or adb. Missing directories return
+`None`; existing empty directories return a view whose individual package
+lookups report missing files. adb/emulator paths are computed, not validated.
+`tools` is `None` when no installer is present, and requesting its executable
+raises a diagnostic. `find_android()` retains its installer-discovery contract.
+Neither API downloads, launches tools, or changes the filesystem.
+
+## Checksum-locked artifacts (unreleased)
+
+```python
+from sdkmgr import Artifact, ArtifactCache
+
+artifact = Artifact(url, sha256, "library.jar")
+cache = ArtifactCache(cache_directory)
+path = cache.find(artifact)  # Read-only; None when absent.
+path = cache.ensure(artifact)
+```
+
+Callers supply an HTTPS URL, a lowercase SHA-256 digest, and a portable single
+filename. Files are stored under `artifacts/DIGEST/FILENAME`; cached bytes are
+rehash-verified instead of trusting a sidecar. Downloads have size/time bounds,
+installation locks, and atomic publication. Failed downloads are discarded;
+corrupt entries require explicit repair and are not overwritten. This is not
+a hostile-local-user cache boundary: keep the cache owned by the calling user.
+Artifact selection, Maven coordinates, dependency graphs, lock-file formats,
+archive interpretation, and classpaths remain the caller's responsibility.
+
+## Development and verification
 
 Python 3.12 or newer is required. Activate the environment after `uv sync`:
 
@@ -462,6 +538,7 @@ Additional opt-in smokes cover the new tools:
 ```sh
 python scripts/smoke_tools.py clang --sanitizer address
 python scripts/smoke_tools.py tailwindcss
+python scripts/smoke_browser.py
 ```
 
 The Clang smoke requires an existing compiler and never installs OS packages.
@@ -469,5 +546,11 @@ The Tailwind smoke uses a temporary cache, or reuses an exact-version tool
 already on PATH. Both clean up their temporary files. Real Clang linking and
 Tailwind download, reuse, and CSS generation pass on Linux, macOS, and Windows.
 Clang installation through OS package managers still needs live validation.
+The browser smoke uses a temporary pinned installation and profile, then
+checks headless JavaScript rendering. `--root` can reuse a cache. Linux hosts
+must allow Chrome's sandbox; the script never changes host security settings.
+Use `--browser-argument=FLAG` only for explicitly chosen test launch options.
 The `tool-provider` CI job runs these smokes on all three operating systems
 when the Tests workflow is dispatched manually; it does not run on every push.
+Its Linux browser smoke explicitly disables the sandbox only for the disposable
+local fixture; sdkmgr discovery and installation never alter sandbox settings.

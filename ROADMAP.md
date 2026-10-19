@@ -36,6 +36,14 @@ The first release establishes independent provisioning before PyJS adopts it.
 
 ## Further validation and follow-up
 
+- Browser discovery and pinned Chrome for Testing provisioning, installer-free
+  Android SDK inspection, and checksum-addressed artifact acquisition are
+  implemented in unreleased source. Editable-source integration is being
+  exercised before the next release and downstream dependency update.
+- Linux pinned browser download, reuse, and headless rendering pass. This
+  Ubuntu host needs an explicit test-only sandbox option; no host policy was
+  changed. Browser discovery does not imply launch compatibility. Real macOS
+  and Windows browser smokes remain part of the release gate.
 - Initial unreleased validation: 365 local tests passed, including tests run
   against isolated wheel and source installations. Ruff and diff checks pass.
   Fresh Linux Tailwind 4.3.3 download, checksum/version validation, cache

@@ -2,7 +2,7 @@ from pathlib import Path
 
 from platformdirs import user_data_path
 
-from . import android, bootstrap, clang, java, mise, nvm, tailwind
+from . import android, bootstrap, browser, clang, java, mise, nvm, tailwind
 from .errors import SDKError
 from .installation import Installation, ToolInstallation, validated_node
 from .providers import Platform, validate_node_version
@@ -10,7 +10,7 @@ from .system import install_package
 
 
 class Manager:
-    """Provision Node, Java, Clang, Tailwind, and Android development tools.
+    """Provision Node, Java, Clang, Tailwind, Chrome, and Android development tools.
 
     Existing mise takes precedence over nvm; with neither installed, ensure()
     bootstraps a pinned mise under root. find() and installed() never install.
@@ -90,6 +90,24 @@ class Manager:
     def find_android(self, *, sdk_root: str | Path | None = None) -> android.AndroidInstallation | None:
         """Discover Android command-line tools without installing or running them."""
         return android.find(android.sdk_root(self.platform, sdk_root), self.platform)
+
+    def inspect_android(self, *, sdk_root: str | Path | None = None) -> android.AndroidInstallation | None:
+        """Inspect existing SDK files without requiring or provisioning an installer."""
+        return android.inspect(android.sdk_root(self.platform, sdk_root), self.platform)
+
+    def find_browser(self, *, executable: str | Path | None = None,
+                     managed: bool = False) -> browser.BrowserInstallation | None:
+        """Discover Chrome/Chromium without launching it; managed selects the pinned cache only."""
+        return browser.find(self.root, self.platform, executable=executable, managed=managed)
+
+    def ensure_browser(self, *, executable: str | Path | None = None,
+                       managed: bool = False) -> browser.BrowserInstallation:
+        """Reuse Chrome/Chromium or install pinned Chrome for Testing if absent.
+
+        managed=True ignores PATH and CHROME_BIN and selects the pinned download.
+        This never installs OS libraries, launches a browser, or creates a profile.
+        """
+        return browser.ensure(self.root, self.platform, executable=executable, managed=managed)
 
     def find_clang(self, *, executable: str | Path | None = None) -> clang.ClangInstallation | None:
         """Find Clang using an explicit path, CLANG, or host locations; do not compile."""

@@ -119,14 +119,16 @@ def _installed_packages(home: Path) -> dict[str, str]:
 
 @dataclass(frozen=True)
 class AndroidInstallation:
-    """An SDK root and its native Android CLI; no JVM is needed to provision it."""
+    """An installed SDK root, optionally with Google's native installer CLI."""
 
     home: Path
-    tools: Path
+    tools: Path | None
     platform: Platform
 
     def executable(self, name: str = "android") -> Path:
         if name == "android":
+            if self.tools is None:
+                raise SDKError(f"Android installer CLI is not installed under {self.home}.")
             suffix = ".exe" if self.platform.system == "windows" else ""
             return self.tools / "bin" / (name + suffix)
         if name in {"adb", "fastboot", "emulator"}:
@@ -137,7 +139,9 @@ class AndroidInstallation:
     def environment(self, base: dict[str, str] | None = None) -> dict[str, str]:
         result = dict(os.environ if base is None else base)
         result["ANDROID_HOME"] = result["ANDROID_SDK_ROOT"] = str(self.home)
-        paths = (self.tools / "bin", self.home / "platform-tools", self.home / "emulator")
+        paths = [self.home / "platform-tools", self.home / "emulator"]
+        if self.tools is not None:
+            paths.insert(0, self.tools / "bin")
         result["PATH"] = os.pathsep.join(map(str, paths)) + os.pathsep + result.get("PATH", "")
         # Cross-OS download overrides must not silently provision unusable tools.
         result.pop("REPO_OS_OVERRIDE", None)
@@ -184,6 +188,16 @@ def find(home: Path, host: Platform) -> AndroidInstallation | None:
         return None
     except OSError as error:
         raise SDKError(f"Cannot discover Android command-line tools: {error}") from error
+
+
+def inspect(home: Path, host: Platform) -> AndroidInstallation | None:
+    """Inspect an existing root; individual tool lookups validate their files."""
+    try:
+        if home.is_dir():
+            return AndroidInstallation(home, command_tools(home, host), host)
+        return None
+    except OSError as error:
+        raise SDKError(f"Cannot inspect Android SDK: {error}") from error
 
 
 def _verify_packages(sdk: AndroidInstallation, packages):
